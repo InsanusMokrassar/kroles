@@ -6,6 +6,7 @@ String[] includes = [
     ":repos:ktor",
     ":repos:ktor:client",
     ":repos:ktor:server",
+    ":dokka",
 ]
 
 

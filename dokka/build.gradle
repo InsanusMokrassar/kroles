@@ -1,0 +1,133 @@
+plugins {
+    id "org.jetbrains.kotlin.multiplatform"
+    id "org.jetbrains.kotlin.plugin.serialization"
+    id "com.android.library"
+    id "org.jetbrains.dokka"
+}
+
+repositories {
+    mavenLocal()
+    google()
+    mavenCentral()
+}
+
+kotlin {
+    jvm()
+    js(IR) {
+        browser()
+        nodejs()
+    }
+    androidTarget {}
+
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation kotlin('stdlib')
+
+                project.parent.subprojects.forEach {
+                    if (
+                            it.name != project.name
+                                    && it.hasProperty("kotlin")
+                                    && it.kotlin.sourceSets.any { it.name.contains("commonMain") }
+                                    && it.kotlin.sourceSets.any { it.name.contains("jsMain") }
+                                    && it.kotlin.sourceSets.any { it.name.contains("jvmMain") }
+                                    && it.kotlin.sourceSets.any { it.name.contains("androidMain") }
+                    ) {
+                        api it
+                    }
+                }
+            }
+        }
+        jsMain {
+            dependencies {
+                implementation kotlin('stdlib')
+
+                project.parent.subprojects.forEach {
+                    if (
+                            it.name != project.name
+                                    && it.hasProperty("kotlin")
+                                    && it.kotlin.sourceSets.any { it.name.contains("commonMain") }
+                                    && it.kotlin.sourceSets.any { it.name.contains("jsMain") }
+                    ) {
+                        api it
+                    }
+                }
+            }
+        }
+        jvmMain {
+            dependencies {
+                implementation kotlin('stdlib')
+
+                project.parent.subprojects.forEach {
+                    if (
+                            it.name != project.name
+                                    && it.hasProperty("kotlin")
+                                    && it.kotlin.sourceSets.any { it.name.contains("commonMain") }
+                                    && it.kotlin.sourceSets.any { it.name.contains("jvmMain") }
+                    ) {
+                        api it
+                    }
+                }
+            }
+        }
+        androidMain {
+            dependencies {
+                implementation kotlin('stdlib')
+
+                project.parent.subprojects.forEach {
+                    if (
+                            it.name != project.name
+                                    && it.hasProperty("kotlin")
+                                    && it.kotlin.sourceSets.any { it.name.contains("commonMain") }
+                                    && it.kotlin.sourceSets.any { it.name.contains("androidMain") }
+                    ) {
+                        api it
+                    }
+                }
+            }
+        }
+    }
+}
+
+private List<SourceDirectorySet> findSourcesWithName(String... approximateNames) {
+    return parent.subprojects
+            .findAll { it != project && it.hasProperty("kotlin") && (it.name.contains("dokka") == false) }
+            .collectMany { it.kotlin.sourceSets }
+            .findAll { sourceSet ->
+                approximateNames.any { nameToFilter ->
+                    sourceSet.name.contains(nameToFilter)
+                }
+            }.collect { it.kotlin }
+}
+
+dokka {
+    dokkaSourceSets {
+        configureEach {
+            skipDeprecated.set(true)
+
+            sourceLink {
+                localDirectory.set(file("../"))
+                remoteUrl.set(new URI("https://github.com/InsanusMokrassar/kroles/blob/master/"))
+                remoteLineSuffix.set("#L")
+            }
+        }
+
+        named("commonMain") {
+            sourceRoots.setFrom(findSourcesWithName("commonMain"))
+        }
+
+        named("jsMain") {
+            sourceRoots.setFrom(findSourcesWithName("jsMain"))
+        }
+
+        named("jvmMain") {
+            sourceRoots.setFrom(findSourcesWithName("jvmMain"))
+        }
+
+        named("androidMain") {
+            sourceRoots.setFrom(findSourcesWithName("androidMain"))
+        }
+    }
+}
+
+apply from: "$defaultAndroidSettingsPresetPath"

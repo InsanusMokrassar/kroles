@@ -3,7 +3,9 @@
 kotlin = "2.3.21"
 kotlin-serialization = "1.11.0"
 
-dokka = "1.9.10"
+dokka = "2.2.0"
+
+nmcp = "1.5.0"
 
 microutils = "0.30.0"
 kslog = "1.6.1"
@@ -54,3 +56,4 @@ github-release = { module = "com.github.breadmoirai:github-release", version.ref
 
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+nmcp-aggregation = { id = "com.gradleup.nmcp.aggregation", version.ref = "nmcp" }

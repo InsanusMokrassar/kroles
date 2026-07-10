@@ -1,3 +1,5 @@
+import java.time.Duration
+
 buildscript {
     repositories {
         google()
@@ -13,6 +15,23 @@ buildscript {
         classpath libs.kotlin.serialization.plugin
         classpath libs.kotlin.dokka.plugin
         classpath libs.github.release
+    }
+}
+
+plugins {
+    alias(libs.plugins.nmcp.aggregation)
+}
+
+if ((project.hasProperty('SONATYPE_USER') || System.getenv('SONATYPE_USER') != null) && (project.hasProperty('SONATYPE_PASSWORD') || System.getenv('SONATYPE_PASSWORD') != null)) {
+    nmcpAggregation {
+        centralPortal {
+            username = project.hasProperty('SONATYPE_USER') ? project.property('SONATYPE_USER') : System.getenv('SONATYPE_USER')
+            password = project.hasProperty('SONATYPE_PASSWORD') ? project.property('SONATYPE_PASSWORD') : System.getenv('SONATYPE_PASSWORD')
+            validationTimeout = Duration.ofHours(4)
+            publishingType = System.getenv('PUBLISHING_TYPE') != "" ? System.getenv('PUBLISHING_TYPE') : "USER_MANAGED"
+        }
+
+        publishAllProjectsProbablyBreakingProjectIsolation()
     }
 }
 

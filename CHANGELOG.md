@@ -2,7 +2,11 @@
 
 ## 0.0.2
 
+* Add `Dokka` documentation aggregation module
+* Add publishing to Maven Central via `NMCP`
 * Dependencies:
+    * `Dokka`: `1.9.10` -> `2.2.0`
+    * `NMCP`: `1.5.0`
     * `Kotlin`: `1.9.22` -> `2.3.21`
     * `Kotlin Serialization`: `1.6.2` -> `1.11.0`
     * `MicroUtils`: `0.20.34` -> `0.30.0`
