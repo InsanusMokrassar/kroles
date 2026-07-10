@@ -12,6 +12,17 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * [WriteRolesRepo] implementation that performs role mutations against a remote roles server.
+ *
+ * Mutating methods send POST requests (with a [RolesKtorConstants] wrapper DTO as body) to URLs
+ * precomputed from [rootPath], while the change-event flows are backed by standard websocket flows
+ * connected to the corresponding flow path parts.
+ *
+ * @param client Ktor HTTP client used for every request.
+ * @param rootPath Root path part the roles API is served under; defaults to
+ * [RolesKtorConstants.DefaultRolesRootPathPart].
+ */
 class WriteKtorRolesRepo(
     private val client: HttpClient,
     rootPath: String = RolesKtorConstants.DefaultRolesRootPathPart

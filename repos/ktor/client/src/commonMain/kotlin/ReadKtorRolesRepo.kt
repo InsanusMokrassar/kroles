@@ -16,6 +16,16 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.http.*
 
+/**
+ * [ReadRolesRepo] implementation that reads roles data from a remote roles server over HTTP.
+ *
+ * Each method issues a GET request built from [rootPath] and the matching path part and query
+ * parameters from [RolesKtorConstants], then deserializes the response body.
+ *
+ * @param client Ktor HTTP client used for every request.
+ * @param rootPath Root path part the roles API is served under; defaults to
+ * [RolesKtorConstants.DefaultRolesRootPathPart].
+ */
 class ReadKtorRolesRepo(
     private val client: HttpClient,
     private val rootPath: String = RolesKtorConstants.DefaultRolesRootPathPart

@@ -4,6 +4,7 @@
 
 * Add `Dokka` documentation aggregation module
 * Add publishing to Maven Central via `NMCP`
+* Add missing KDocs
 * Dependencies:
     * `Dokka`: `1.9.10` -> `2.2.0`
     * `NMCP`: `1.5.0`

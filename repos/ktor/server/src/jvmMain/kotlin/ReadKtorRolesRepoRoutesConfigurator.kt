@@ -12,6 +12,16 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
+/**
+ * Registers the read-only roles API endpoints on this [Route], serving them from [repo].
+ *
+ * Adds GET handlers for retrieving a role's direct subjects, a subject's direct and all roles, the
+ * full subject-to-roles map, paginated roles and subjects, and the contains/containsAny checks. Each
+ * handler reads its arguments from query parameters and responds with the repository result, or with
+ * an error status when required parameters are missing or invalid.
+ *
+ * @param repo Read repository the endpoints delegate to.
+ */
 fun Route.configureReadRolesRepoRoutes(
     repo: ReadRolesRepo
 ) {

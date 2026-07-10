@@ -16,6 +16,19 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.emptyFlow
 
+/**
+ * Caching decorator over another [RolesRepo]. It keeps a precomputed in-memory snapshot of the whole subject/role
+ * hierarchy (built via [buildRolesNodesGraph]) so that read operations are served without touching the underlying
+ * repo, while writes are delegated to it and trigger a cache refresh.
+ *
+ * The snapshot is rebuilt whenever the [originalRepo] emits a change event, and the refresh work is serialized
+ * through an internal queue guarded by [locker].
+ *
+ * @param originalRepo the underlying repository this cache decorates and delegates writes to
+ * @param scope coroutine scope used for the background cache-update job and event subscriptions
+ * @param locker read/write lock protecting the cached state
+ * @param onIdentifierRemovedFlow optional flow of direct identifiers whose roles should be excluded when emitted
+ */
 class CacheRolesRepo(
     private val originalRepo: RolesRepo,
     scope: CoroutineScope,

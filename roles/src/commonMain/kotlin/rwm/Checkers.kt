@@ -3,6 +3,9 @@ package dev.inmo.kroles.roles.rwm
 import dev.inmo.kroles.roles.BaseRole
 
 
+/**
+ * Returns true when any role in the list grants the [accessCheck] access for the given [prefix] and [identifier].
+ */
 suspend fun List<BaseRole>.isIdentifierAllowed(
     prefix: String,
     identifier: RWMRole.Identifier,
@@ -13,6 +16,9 @@ suspend fun List<BaseRole>.isIdentifierAllowed(
     }
 }
 
+/**
+ * Overload of isIdentifierAllowed building the checker from a raw [requiredAccess] rights string.
+ */
 suspend fun List<BaseRole>.isIdentifierAllowed(
     prefix: String,
     identifier: RWMRole.Identifier,
@@ -21,6 +27,9 @@ suspend fun List<BaseRole>.isIdentifierAllowed(
     return isIdentifierAllowed(prefix, identifier, RightsChecker(requiredAccess))
 }
 
+/**
+ * Overload of isIdentifierAllowed building the checker from the individual read/write/manage flags.
+ */
 suspend fun List<BaseRole>.isIdentifierAllowed(
     prefix: String,
     identifier: RWMRole.Identifier,
@@ -31,6 +40,9 @@ suspend fun List<BaseRole>.isIdentifierAllowed(
     return isIdentifierAllowed(prefix, identifier, RightsChecker(read, write, manage))
 }
 
+/**
+ * Returns true when any role in the list grants the [accessCheck] access for the given [prefix], ignoring identifiers.
+ */
 suspend fun List<BaseRole>.isAccessAllowed(
     prefix: String,
     accessCheck: RightsChecker
@@ -40,6 +52,9 @@ suspend fun List<BaseRole>.isAccessAllowed(
     }
 }
 
+/**
+ * Overload of isAccessAllowed building the checker from a raw [requiredAccess] rights string.
+ */
 suspend fun List<BaseRole>.isAccessAllowed(
     prefix: String,
     requiredAccess: String
@@ -47,6 +62,9 @@ suspend fun List<BaseRole>.isAccessAllowed(
     return isAccessAllowed(prefix, RightsChecker(requiredAccess))
 }
 
+/**
+ * Overload of isAccessAllowed building the checker from the individual read/write/manage flags.
+ */
 suspend fun List<BaseRole>.isAccessAllowed(
     prefix: String,
     read: Boolean = false,
@@ -56,6 +74,11 @@ suspend fun List<BaseRole>.isAccessAllowed(
     return isAccessAllowed(prefix, RightsChecker(read, write, manage))
 }
 
+/**
+ * Collects the identifiers of the roles matching [prefix] whose rights pass [accessCheck].
+ *
+ * @return The list of allowed identifiers, or null when a matching role has no identifier.
+ */
 suspend fun List<BaseRole>.getAllowedIdentifiers(
     prefix: String,
     accessCheck: RightsChecker
@@ -66,11 +89,17 @@ suspend fun List<BaseRole>.getAllowedIdentifiers(
     }
 }
 
+/**
+ * Overload of getAllowedIdentifiers building the checker from a raw [requiredAccess] rights string.
+ */
 suspend fun List<BaseRole>.getAllowedIdentifiers(
     prefix: String,
     requiredAccess: String
 ): List<RWMRole.Identifier>? = getAllowedIdentifiers(prefix, RightsChecker(requiredAccess))
 
+/**
+ * Overload of getAllowedIdentifiers building the checker from the individual read/write/manage flags.
+ */
 suspend fun List<BaseRole>.getAllowedIdentifiers(
     prefix: String,
     read: Boolean = false,
@@ -79,6 +108,10 @@ suspend fun List<BaseRole>.getAllowedIdentifiers(
 ): List<RWMRole.Identifier>? = getAllowedIdentifiers(prefix, RightsChecker(read, write, manage))
 
 
+/**
+ * Checks whether this list of roles grants the access described by [role]. For an RWM role its prefix, rights and
+ * optional identifier are checked; otherwise the list is checked for an exact containment of [role].
+ */
 suspend fun List<BaseRole>.includesBaseRole(role: BaseRole): Boolean {
     return role.rwmRoleOrNull()?.let {
         val identifier = it.identifier

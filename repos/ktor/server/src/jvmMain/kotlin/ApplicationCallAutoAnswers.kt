@@ -7,6 +7,12 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 
+/**
+ * Checks whether [subject] is allowed on [identifier] under [prefix] according to [accessChecker],
+ * and responds with [statusCode] when it is not.
+ *
+ * @return `true` when access is allowed; otherwise `false` (after responding with [statusCode]).
+ */
 suspend fun ApplicationCall.isIdentifierAllowedOrStatus(
     repo: ReadRolesRepo,
     prefix: String,
@@ -29,6 +35,11 @@ suspend fun ApplicationCall.isIdentifierAllowedOrStatus(
     return result
 }
 
+/**
+ * Overload of [isIdentifierAllowedOrStatus] taking the [rightsChecker] before the [statusCode].
+ *
+ * @return `true` when access is allowed; otherwise `false` (after responding with [statusCode]).
+ */
 suspend fun ApplicationCall.isIdentifierAllowedOrStatus(
     repo: ReadRolesRepo,
     prefix: String,
@@ -45,6 +56,12 @@ suspend fun ApplicationCall.isIdentifierAllowedOrStatus(
     accessChecker = rightsChecker
 )
 
+/**
+ * Overload of [isIdentifierAllowedOrStatus] that builds the rights check from a [requiredRights]
+ * string.
+ *
+ * @return `true` when access is allowed; otherwise `false` (after responding with [statusCode]).
+ */
 suspend fun ApplicationCall.isIdentifierAllowedOrStatus(
     repo: ReadRolesRepo,
     prefix: String,
@@ -61,6 +78,12 @@ suspend fun ApplicationCall.isIdentifierAllowedOrStatus(
     statusCode = statusCode
 )
 
+/**
+ * Convenience form of [isIdentifierAllowedOrStatus] that responds with `NoContent` when [subject] is
+ * not allowed on [identifier] under [prefix] for the given [rightsChecker].
+ *
+ * @return `true` when access is allowed; otherwise `false` (after responding with `NoContent`).
+ */
 suspend fun ApplicationCall.isIdentifierAllowedOrNoContent(
     repo: ReadRolesRepo,
     prefix: String,
@@ -75,6 +98,12 @@ suspend fun ApplicationCall.isIdentifierAllowedOrNoContent(
     rightsChecker = rightsChecker
 )
 
+/**
+ * Overload of [isIdentifierAllowedOrNoContent] that builds the rights check from a [requiredRights]
+ * string and responds with `NoContent` when access is denied.
+ *
+ * @return `true` when access is allowed; otherwise `false` (after responding with `NoContent`).
+ */
 suspend fun ApplicationCall.isIdentifierAllowedOrNoContent(
     repo: ReadRolesRepo,
     prefix: String,
@@ -89,6 +118,12 @@ suspend fun ApplicationCall.isIdentifierAllowedOrNoContent(
     requiredRights = requiredRights
 )
 
+/**
+ * Overload of [isIdentifierAllowedOrNoContent] that assembles the rights check from the individual
+ * [read], [manage] and [write] flags and responds with `NoContent` when access is denied.
+ *
+ * @return `true` when access is allowed; otherwise `false` (after responding with `NoContent`).
+ */
 suspend fun ApplicationCall.isIdentifierAllowedOrNoContent(
     repo: ReadRolesRepo,
     prefix: String,
@@ -110,6 +145,12 @@ suspend fun ApplicationCall.isIdentifierAllowedOrNoContent(
 )
 
 
+/**
+ * Checks whether [subject] has access under [prefix] according to [rightsChecker], and responds with
+ * [statusCode] when it does not.
+ *
+ * @return `true` when access is allowed; otherwise `false` (after responding with [statusCode]).
+ */
 suspend fun ApplicationCall.isAccessAllowedOrStatus(
     repo: ReadRolesRepo,
     prefix: String,
@@ -126,6 +167,12 @@ suspend fun ApplicationCall.isAccessAllowedOrStatus(
     return result
 }
 
+/**
+ * Overload of [isAccessAllowedOrStatus] that builds the rights check from a [requiredRights] string
+ * and defaults to responding with `MethodNotAllowed` when access is denied.
+ *
+ * @return `true` when access is allowed; otherwise `false` (after responding with [statusCode]).
+ */
 suspend fun ApplicationCall.isAccessAllowedOrStatus(
     repo: ReadRolesRepo,
     prefix: String,
@@ -140,6 +187,12 @@ suspend fun ApplicationCall.isAccessAllowedOrStatus(
     rightsChecker = RightsChecker(requiredRights)
 )
 
+/**
+ * Convenience form of [isAccessAllowedOrStatus] that responds with `MethodNotAllowed` when [subject]
+ * has no access under [prefix] for the given [rightsChecker].
+ *
+ * @return `true` when access is allowed; otherwise `false` (after responding with `MethodNotAllowed`).
+ */
 suspend fun ApplicationCall.isAccessAllowedOrRespondNotAllowed(
     repo: ReadRolesRepo,
     prefix: String,
@@ -153,6 +206,12 @@ suspend fun ApplicationCall.isAccessAllowedOrRespondNotAllowed(
     rightsChecker = rightsChecker
 )
 
+/**
+ * Overload of [isAccessAllowedOrRespondNotAllowed] that builds the rights check from a
+ * [requiredRights] string and responds with `MethodNotAllowed` when access is denied.
+ *
+ * @return `true` when access is allowed; otherwise `false` (after responding with `MethodNotAllowed`).
+ */
 suspend fun ApplicationCall.isAccessAllowedOrRespondNotAllowed(
     repo: ReadRolesRepo,
     prefix: String,
@@ -165,6 +224,13 @@ suspend fun ApplicationCall.isAccessAllowedOrRespondNotAllowed(
     rightsChecker = RightsChecker(requiredRights)
 )
 
+/**
+ * Overload of [isAccessAllowedOrRespondNotAllowed] that assembles the rights check from the
+ * individual [read], [manage] and [write] flags and responds with `MethodNotAllowed` when access is
+ * denied.
+ *
+ * @return `true` when access is allowed; otherwise `false` (after responding with `MethodNotAllowed`).
+ */
 suspend fun ApplicationCall.isAccessAllowedOrRespondNotAllowed(
     repo: ReadRolesRepo,
     prefix: String,
