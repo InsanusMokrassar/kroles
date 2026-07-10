@@ -2,31 +2,72 @@ package dev.inmo.kroles.repos
 
 import dev.inmo.kroles.roles.BaseRole
 
+/**
+ * Node of the subject/role hierarchy graph. Each node holds a [subject] and links to its child nodes.
+ *
+ * The type comes in [Mutable] (builder) and [Immutable] (snapshot) flavours, and in [DirectNode] and
+ * [RoleNode] variants depending on the wrapped subject.
+ */
 sealed interface RoleSubjectGraphNode {
+    /**
+     * The subject this node represents.
+     */
     val subject: BaseRoleSubject
+    /**
+     * Nodes that are children of this node in the hierarchy.
+     */
     val childNodes: Set<RoleSubjectGraphNode>
 
+    /**
+     * Mutable graph node used while building the hierarchy; also tracks its [parentNodes].
+     */
     sealed interface Mutable : RoleSubjectGraphNode {
+        /**
+         * Nodes that are parents of this node in the hierarchy.
+         */
         val parentNodes: MutableSet<Mutable>
         override val childNodes: MutableSet<Mutable>
 
+        /**
+         * Produces the immutable snapshot of this node, reusing already converted nodes from [immutableMap]
+         * to handle shared and cyclic references.
+         */
         fun immutable(immutableMap: MutableMap<Mutable, Immutable> = mutableMapOf()): Immutable
 
         companion object {
+            /**
+             * Creates the matching mutable node for the given [roleSubject]: a [RoleNode.MutableRoleNode] for a
+             * role subject or a [DirectNode.MutableDirectNode] for a direct subject.
+             */
             operator fun invoke(roleSubject: BaseRoleSubject) = when (roleSubject) {
                 is BaseRoleSubject.OtherRole -> RoleNode.MutableRoleNode(roleSubject.role)
                 is BaseRoleSubject.Direct -> DirectNode.MutableDirectNode(roleSubject.identifier)
             }
         }
     }
+    /**
+     * Immutable snapshot of a graph node.
+     */
     sealed interface Immutable : RoleSubjectGraphNode {
         override val childNodes: Set<Immutable>
 
+        /**
+         * Returns all descendant nodes reachable from this node.
+         */
         fun allChildren(): Set<RoleSubjectGraphNode> = allChildren(emptySet())
     }
+    /**
+     * Graph node whose subject is a [BaseRoleSubject.Direct] identifier.
+     */
     sealed interface DirectNode : RoleSubjectGraphNode {
+        /**
+         * The raw identifier of the direct subject.
+         */
         val identifier: BaseRolSubjectDirectIdentifier
         override val subject: BaseRoleSubject.Direct
+        /**
+         * Immutable snapshot variant of a [DirectNode].
+         */
         data class ImmutableDirectNode(override val identifier: BaseRolSubjectDirectIdentifier, override val childNodes: Set<Immutable>) : DirectNode, Immutable {
             override val subject: BaseRoleSubject.Direct = BaseRoleSubject.Direct(identifier)
 
@@ -34,6 +75,10 @@ sealed interface RoleSubjectGraphNode {
                 return identifier.hashCode()
             }
         }
+        /**
+         * Mutable builder variant of a [DirectNode]. A direct subject is always a leaf as a subject, so it exposes
+         * no real parents.
+         */
         data class MutableDirectNode(
             override val identifier: BaseRolSubjectDirectIdentifier,
             override val childNodes: MutableSet<Mutable> = mutableSetOf()
@@ -64,9 +109,18 @@ sealed interface RoleSubjectGraphNode {
             }
         }
     }
+    /**
+     * Graph node whose subject is a [BaseRoleSubject.OtherRole], i.e. a role acting as a subject.
+     */
     sealed interface RoleNode : RoleSubjectGraphNode {
+        /**
+         * The role this node represents.
+         */
         val role: BaseRole
         override val subject: BaseRoleSubject.OtherRole
+        /**
+         * Immutable snapshot variant of a [RoleNode].
+         */
         data class ImmutableRoleNode(
             override val role: BaseRole,
             override val childNodes: Set<Immutable>
@@ -77,6 +131,9 @@ sealed interface RoleSubjectGraphNode {
                 return role.hashCode()
             }
         }
+        /**
+         * Mutable builder variant of a [RoleNode], tracking both parent and child links.
+         */
         data class MutableRoleNode(
             override val role: BaseRole,
             override val parentNodes: MutableSet<Mutable> = mutableSetOf(),
@@ -111,6 +168,10 @@ sealed interface RoleSubjectGraphNode {
         }
     }
 }
+/**
+ * Returns all descendant nodes reachable from this node, skipping any node present in [exclude] to guard
+ * against revisiting already seen nodes (and cycles).
+ */
 fun RoleSubjectGraphNode.Immutable.allChildren(exclude: Set<RoleSubjectGraphNode.Immutable>): Set<RoleSubjectGraphNode.Immutable> {
     return childNodes.fold(childNodes) { acc, roleSubjectGraphNode ->
         if (roleSubjectGraphNode !in exclude) {
@@ -164,13 +225,31 @@ private fun getTempNodes(
     } ?: emptySet()
 }
 
+/**
+ * Generic directed-graph node holding a [value] together with its direct [parents] and [children].
+ */
 sealed interface GraphNode<T> {
+    /**
+     * The value stored in this node.
+     */
     val value: T
+    /**
+     * Direct parent nodes.
+     */
     val parents: Set<GraphNode<T>>
+    /**
+     * Direct child nodes.
+     */
     val children: Set<GraphNode<T>>
 
+    /**
+     * All nodes reachable by following [children] transitively.
+     */
     val allChildren: Set<GraphNode<T>>
         get() = children + children.flatMap { it.allChildren }.toSet()
+    /**
+     * All nodes reachable by following [parents] transitively.
+     */
     val allParents: Set<GraphNode<T>>
         get() = parents + parents.flatMap { it.allParents }.toSet()
 
@@ -187,6 +266,10 @@ sealed interface GraphNode<T> {
     ) : GraphNode<T>
 
     companion object {
+        /**
+         * Builds a graph from [dataMap], where each key maps to the values that become its children, and returns
+         * a map from every value to its corresponding node.
+         */
         fun <T> buildGraph(dataMap: Map<T, Iterable<T>>): Map<T, GraphNode<T>> {
             val nodesMap = mutableMapOf<T, MutableGraphNode<T>>()
 
@@ -205,6 +288,11 @@ sealed interface GraphNode<T> {
 }
 
 
+/**
+ * Builds the subject hierarchy graph from [directSubNodes], which maps each subject to the roles directly granted
+ * to it. Each role is turned into a [BaseRoleSubject] so it can act as a child node, and the result maps every
+ * subject to its [GraphNode].
+ */
 fun buildRolesNodesGraph(directSubNodes: Map<BaseRoleSubject, Set<BaseRole>>): Map<BaseRoleSubject, GraphNode<BaseRoleSubject>> {
     return GraphNode.buildGraph(directSubNodes.mapValues { it.value.map { BaseRoleSubject(it) } })
 }

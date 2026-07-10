@@ -9,6 +9,16 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
+/**
+ * Registers the write-side roles API endpoints on this [Route], serving them from [repo].
+ *
+ * Sets up websocket handling for the role created/removed/included/excluded change flows, plus POST
+ * handlers for including, excluding and modifying a subject's direct roles and for creating and
+ * removing roles. Each POST handler receives the corresponding [RolesKtorConstants] wrapper (or a
+ * [dev.inmo.kroles.roles.BaseRole]) as body and responds with the repository result.
+ *
+ * @param repo Write repository the endpoints delegate to.
+ */
 fun Route.configureWriteRolesRepoRoutes(
     repo: WriteRolesRepo
 ) {
