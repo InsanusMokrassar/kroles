@@ -7,9 +7,9 @@ import dev.inmo.micro_utils.ktor.server.getQueryParameter
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
-import io.ktor.util.pipeline.*
+import io.ktor.server.routing.*
 
-internal suspend inline fun PipelineContext<Unit, ApplicationCall>.subjectOrRespondError(): BaseRoleSubject? {
+internal suspend inline fun RoutingContext.subjectOrRespondError(): BaseRoleSubject? {
     val role = call.getQueryParameter(RolesKtorConstants.SubjectRoleQueryParameterName) ?.let(::BaseRole) ?.let(
         BaseRoleSubject::OtherRole
     )
