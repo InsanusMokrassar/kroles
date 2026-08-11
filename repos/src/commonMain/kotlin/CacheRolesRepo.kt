@@ -57,7 +57,7 @@ class CacheRolesRepo(
     override val roleCreated: Flow<BaseRole> = _roleCreated.asSharedFlow()
     private val _roleRemoved = MutableSharedFlow<BaseRole>()
     override val roleRemoved: Flow<BaseRole> = _roleRemoved.asSharedFlow()
-    private val updatesQueue = Channel<CompletableDeferred<Unit>>(UNLIMITED)
+    private val updatesQueue = Channel<CompletableJob>(UNLIMITED)
     private val updatesJob = scope.launchSafelyWithoutExceptions {
         for (updateRequested in updatesQueue) {
             val pendingDeferreds = mutableListOf(updateRequested)
@@ -69,7 +69,7 @@ class CacheRolesRepo(
                     fullUpdate()
 
                     pendingDeferreds.forEach {
-                        runCatchingSafely { it.complete(Unit) }
+                        runCatchingLogging { it.complete() }
                     }
                 } catch (e: Throwable) {
                     this@CacheRolesRepo.logger.e(e) { "Unable to update roles cache" }
@@ -108,8 +108,8 @@ class CacheRolesRepo(
         }
     }
 
-    private fun requestUpdateCache(): Deferred<Unit> {
-        val deferred = CompletableDeferred<Unit>()
+    private fun requestUpdateCache(): Job {
+        val deferred = Job()
 
         updatesQueue.trySend(deferred)
 
@@ -199,45 +199,87 @@ class CacheRolesRepo(
     }
 
     override suspend fun includeDirect(subject: BaseRoleSubject, role: BaseRole): Boolean {
-        return locker.withWriteLock {
+        val included = locker.withWriteLock {
             originalRepo.includeDirect(subject, role)
         }
+
+        if (included) {
+            requestUpdateCache().join()
+        }
+
+        return included
     }
 
     override suspend fun includeDirect(subject: BaseRoleSubject, roles: List<BaseRole>): Boolean {
-        return locker.withWriteLock {
+        val included = locker.withWriteLock {
             originalRepo.includeDirect(subject, roles)
         }
+
+        if (included) {
+            requestUpdateCache().join()
+        }
+
+        return included
     }
 
     override suspend fun excludeDirect(subject: BaseRoleSubject, role: BaseRole): Boolean {
-        return locker.withWriteLock {
+        val excluded = locker.withWriteLock {
             originalRepo.excludeDirect(subject, role)
         }
+
+        if (excluded) {
+            requestUpdateCache().join()
+        }
+
+        return excluded
     }
 
     override suspend fun excludeDirect(subject: BaseRoleSubject, roles: List<BaseRole>): Boolean {
-        return locker.withWriteLock {
+        val excluded = locker.withWriteLock {
             originalRepo.excludeDirect(subject, roles)
         }
+
+        if (excluded) {
+            requestUpdateCache().join()
+        }
+
+        return excluded
     }
 
     override suspend fun modifyDirect(subject: BaseRoleSubject, toExclude: List<BaseRole>, toInclude: List<BaseRole>): Boolean {
-        return locker.withWriteLock {
+        val modified = locker.withWriteLock {
             originalRepo.modifyDirect(subject, toExclude, toInclude)
         }
+
+        if (modified) {
+            requestUpdateCache().join()
+        }
+
+        return modified
     }
 
     override suspend fun createRole(newRole: BaseRole): Boolean {
-        return locker.withWriteLock {
+        val created = locker.withWriteLock {
             originalRepo.createRole(newRole)
         }
+
+        if (created) {
+            requestUpdateCache().join()
+        }
+
+        return created
     }
 
     override suspend fun removeRole(role: BaseRole): Boolean {
-        return locker.withWriteLock {
+        val removed = locker.withWriteLock {
             originalRepo.removeRole(role)
         }
+
+        if (removed) {
+            requestUpdateCache().join()
+        }
+
+        return removed
     }
 
     override suspend fun getAllSubjectsByPagination(subject: BaseRoleSubject): Set<BaseRoleSubject> {
