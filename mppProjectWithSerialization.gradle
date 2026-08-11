@@ -2,28 +2,14 @@ project.version = "$version"
 project.group = "$group"
 
 apply from: "$publishGradlePath"
+apply from: "$defaultAndroidSettingsPresetPath"
 
 kotlin {
-    jvm {
-        compilations.main {
-            kotlinOptions {
-                jvmTarget = "17"
-            }
-        }
-    }
+    jvm()
     js (IR) {
         browser()
         nodejs()
     }
-    androidTarget {
-        publishAllLibraryVariants()
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = "17"
-            }
-        }
-    }
-
     sourceSets {
         commonMain {
             dependencies {
@@ -47,7 +33,7 @@ kotlin {
                 implementation libs.kotlin.test.js
             }
         }
-        androidUnitTest {
+        androidHostTest {
             dependencies {
                 implementation libs.kotlin.test.junit
                 implementation libs.android.test.junit
@@ -61,5 +47,3 @@ java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
 }
-
-apply from: "$defaultAndroidSettingsPresetPath"

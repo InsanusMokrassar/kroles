@@ -40,7 +40,11 @@ allprojects {
         mavenLocal()
         mavenCentral()
         google()
-        maven { url "https://nexus.inmo.dev/repository/maven-releases/" }
+//        maven { url "https://nexus.inmo.dev/repository/maven-releases/" }
+    }
+
+    tasks.withType(AbstractTestTask).configureEach {
+        failOnNoDiscoveredTests = false
     }
 }
 

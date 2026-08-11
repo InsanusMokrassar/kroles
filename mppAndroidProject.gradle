@@ -2,17 +2,9 @@ project.version = "$version"
 project.group = "$group"
 
 apply from: "$publishGradlePath"
+apply from: "$defaultAndroidSettingsPresetPath"
 
 kotlin {
-    androidTarget {
-        publishAllLibraryVariants()
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = "17"
-            }
-        }
-    }
-
     sourceSets {
         commonMain {
             dependencies {
@@ -26,7 +18,7 @@ kotlin {
                 implementation libs.kotlin.test.annotations.common
             }
         }
-        androidUnitTest {
+        androidHostTest {
             dependencies {
                 implementation libs.kotlin.test.junit
                 implementation libs.android.test.junit
@@ -35,5 +27,3 @@ kotlin {
         }
     }
 }
-
-apply from: "$defaultAndroidSettingsPresetPath"
