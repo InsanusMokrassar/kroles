@@ -4,7 +4,7 @@ plugins {
     id "com.android.kotlin.multiplatform.library"
 }
 
-apply from: "$mppProjectWithSerializationPresetPath"
+apply from: "$mppProjectWithSerialization"
 
 kotlin {
     sourceSets {

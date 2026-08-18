@@ -1,0 +1,17 @@
+kotlin {
+    jvmToolchain(17)
+    jvm()
+
+    sourceSets {
+        jvmTest {
+            dependencies {
+                implementation libs.kotlin.test.junit
+            }
+        }
+    }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}

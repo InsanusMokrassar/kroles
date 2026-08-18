@@ -11,7 +11,7 @@ repositories {
     mavenCentral()
 }
 
-apply from: "$defaultAndroidSettingsPresetPath"
+apply from: "$defaultAndroidSettings"
 
 kotlin {
     jvm()

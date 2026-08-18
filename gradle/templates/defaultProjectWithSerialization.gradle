@@ -1,9 +1,6 @@
 project.version = "$version"
 project.group = "$group"
 
-apply from: "$publishGradlePath"
-apply from: "$defaultAndroidSettingsPresetPath"
-
 kotlin {
     sourceSets {
         commonMain {
@@ -16,13 +13,6 @@ kotlin {
             dependencies {
                 implementation libs.kotlin.test.common
                 implementation libs.kotlin.test.annotations.common
-            }
-        }
-        androidHostTest {
-            dependencies {
-                implementation libs.kotlin.test.junit
-                implementation libs.android.test.junit
-                implementation libs.android.test.espresso.core
             }
         }
     }

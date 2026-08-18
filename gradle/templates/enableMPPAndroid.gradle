@@ -1,0 +1,13 @@
+apply from: "$defaultAndroidSettings"
+
+kotlin {
+    sourceSets {
+        androidHostTest {
+            dependencies {
+                implementation libs.kotlin.test.junit
+                implementation libs.android.test.junit
+                implementation libs.android.test.espresso.core
+            }
+        }
+    }
+}

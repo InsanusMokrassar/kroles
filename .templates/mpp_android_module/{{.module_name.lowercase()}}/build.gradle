@@ -4,4 +4,4 @@ plugins {
     id "com.android.kotlin.multiplatform.library"
 }
 
-apply from: "$mppAndroidProjectPresetPath"
+apply from: "$mppAndroidProject"

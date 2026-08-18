@@ -1,0 +1,14 @@
+kotlin {
+    js (IR) {
+        browser()
+        nodejs()
+    }
+
+    sourceSets {
+        jsTest {
+            dependencies {
+                implementation libs.kotlin.test.js
+            }
+        }
+    }
+}
