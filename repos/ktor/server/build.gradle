@@ -3,7 +3,7 @@ plugins {
     id "org.jetbrains.kotlin.plugin.serialization"
 }
 
-apply from: "$mppJavaProjectPresetPath"
+apply from: "$mppJavaProject"
 
 
 kotlin {
@@ -16,4 +16,3 @@ kotlin {
         }
     }
 }
-

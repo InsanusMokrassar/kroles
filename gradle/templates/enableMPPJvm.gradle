@@ -1,0 +1,22 @@
+kotlin {
+    jvm {
+        compilations.main {
+            kotlinOptions {
+                jvmTarget = "17"
+            }
+        }
+    }
+
+    sourceSets {
+        jvmTest {
+            dependencies {
+                implementation libs.kotlin.test.junit
+            }
+        }
+    }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}

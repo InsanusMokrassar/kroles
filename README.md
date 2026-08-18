@@ -47,7 +47,7 @@ In case when you need to be sure that JVM sources are not included in Android pa
 ### `mppProjectWithSerialization`
 
 This type of preset have `JVM`, `JS` and `Android` targets and available using
-`apply from: "$mppProjectWithSerializationPresetPath"`. Template for project with this preset looks like next snippet:
+`apply from: "$mppProjectWithSerialization"`. Template for project with this preset looks like next snippet:
 
 ```groovy
 plugins {
@@ -56,7 +56,7 @@ plugins {
     id "com.android.library"
 }
 
-apply from: "$mppProjectWithSerializationPresetPath"
+apply from: "$mppProjectWithSerialization"
 
 // The code below is optional
 
@@ -108,7 +108,7 @@ kotlin {
 
 ### `mppJavaProject`
 
-This type of preset have only `JVM` target and available using `apply from: "$mppJavaProjectPresetPath"`. Template for
+This type of preset have only `JVM` target and available using `apply from: "$mppJavaProject"`. Template for
 project with this preset looks like next snippet:
 
 ```groovy
@@ -116,7 +116,7 @@ plugins {
     id "org.jetbrains.kotlin.multiplatform"
 }
 
-apply from: "$mppJavaProjectPresetPath"
+apply from: "$mppJavaProject"
 
 // The code below is optional
 
@@ -148,7 +148,7 @@ kotlin {
 
 ### `mppJsProject`
 
-This type of preset have only `JS` target and available using `apply from: "mppJsProjectPresetPath"`. Template for
+This type of preset have only `JS` target and available using `apply from: "$mppJsProject"`. Template for
 project with this preset looks like next snippet:
 
 ```groovy
@@ -156,7 +156,7 @@ plugins {
     id "org.jetbrains.kotlin.multiplatform"
 }
 
-apply from: "$mppJsProjectPresetPath"
+apply from: "$mppJsProject"
 
 // The code below is optional
 
@@ -188,7 +188,7 @@ kotlin {
 
 ### `mppAndroidProject`
 
-This type of preset have only `Android` target and available using `apply from: "$mppAndroidProjectPresetPath"`. Template for
+This type of preset have only `Android` target and available using `apply from: "$mppAndroidProject"`. Template for
 project with this preset looks like next snippet:
 
 ```groovy
@@ -197,7 +197,7 @@ plugins {
     id "com.android.library"
 }
 
-apply from: "$mppAndroidProjectPresetPath"
+apply from: "$mppAndroidProject"
 
 // The code below is optional
 

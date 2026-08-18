@@ -3,5 +3,4 @@ plugins {
     id "org.jetbrains.kotlin.plugin.serialization"
 }
 
-apply from: "$mppJsProjectPresetPath"
-
+apply from: "$mppJsProject"

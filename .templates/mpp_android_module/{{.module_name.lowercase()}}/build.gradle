@@ -4,5 +4,4 @@ plugins {
     id "com.android.library"
 }
 
-apply from: "$mppAndroidProjectPresetPath"
-
+apply from: "$mppAndroidProject"

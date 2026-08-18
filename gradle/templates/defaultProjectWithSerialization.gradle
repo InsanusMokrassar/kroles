@@ -1,14 +1,7 @@
 project.version = "$version"
 project.group = "$group"
 
-apply from: "$publishGradlePath"
-
 kotlin {
-    js (IR) {
-        browser()
-        nodejs()
-    }
-
     sourceSets {
         commonMain {
             dependencies {
@@ -20,11 +13,6 @@ kotlin {
             dependencies {
                 implementation libs.kotlin.test.common
                 implementation libs.kotlin.test.annotations.common
-            }
-        }
-        jsTest {
-            dependencies {
-                implementation libs.kotlin.test.js
             }
         }
     }

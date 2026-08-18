@@ -4,7 +4,7 @@ plugins {
     id "com.android.library"
 }
 
-apply from: "$mppProjectWithSerializationPresetPath"
+apply from: "$mppProjectWithSerialization"
 
 kotlin {
     sourceSets {
@@ -16,4 +16,3 @@ kotlin {
         }
     }
 }
-

@@ -1,0 +1,5 @@
+apply from: "$defaultProjectWithSerialization"
+apply from: "$enableMPPJvm"
+apply from: "$enableMPPJs"
+apply from: "$enableMPPAndroid"
+apply from: "$publish"
