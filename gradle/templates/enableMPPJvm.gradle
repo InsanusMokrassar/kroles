@@ -1,11 +1,6 @@
 kotlin {
-    jvm {
-        compilations.main {
-            kotlinOptions {
-                jvmTarget = "17"
-            }
-        }
-    }
+    jvmToolchain(17)
+    jvm()
 
     sourceSets {
         jvmTest {

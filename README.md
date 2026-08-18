@@ -53,7 +53,7 @@ This type of preset have `JVM`, `JS` and `Android` targets and available using
 plugins {
     id "org.jetbrains.kotlin.multiplatform"
     id "org.jetbrains.kotlin.plugin.serialization"
-    id "com.android.library"
+    id "com.android.kotlin.multiplatform.library"
 }
 
 apply from: "$mppProjectWithSerialization"
@@ -194,7 +194,7 @@ project with this preset looks like next snippet:
 ```groovy
 plugins {
     id "org.jetbrains.kotlin.multiplatform"
-    id "com.android.library"
+    id "com.android.kotlin.multiplatform.library"
 }
 
 apply from: "$mppAndroidProject"
