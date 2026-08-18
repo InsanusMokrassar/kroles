@@ -2,6 +2,8 @@
 
 ## 0.0.3
 
+* Update `CacheRolesRepo` cache after successful write operations before returning
+
 ## 0.0.2
 
 * Add `Dokka` documentation aggregation module
