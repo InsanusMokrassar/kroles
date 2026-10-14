@@ -33,7 +33,7 @@ if (secretFile.exists() || project.hasProperty(githubTokenVariableName) || (gith
         token githubReleaseToken
 
         owner = "InsanusMokrassar"
-        repo = "MicroUtils"
+        repo = "kroles"
 
         tagName = "v${project.version}"
         releaseName = "${project.version}"
