@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.0.4
+
 ## 0.0.3
 
 * Update `CacheRolesRepo` cache after successful write operations before returning
