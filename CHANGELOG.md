@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.4
+
+* Dependencies:
+    * `Kotlin`: `2.3.21` -> `2.4.21`
+    * `NMCP`: `1.6.1` -> `1.6.2`
+    * `KSLog`: `1.6.1` -> `2.1.0`
+    * `MicroUtils`: `0.30.0` -> `0.32.0`
+
 ## 0.0.3
 
 * Update `CacheRolesRepo` cache after successful write operations before returning

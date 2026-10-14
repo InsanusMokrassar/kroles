@@ -1,14 +1,14 @@
 [versions]
 
-kotlin = "2.3.21"
+kotlin = "2.4.21"
 kotlin-serialization = "1.11.0"
 
 dokka = "2.2.0"
 
-nmcp = "1.6.1"
+nmcp = "1.6.2"
 
-microutils = "0.30.0"
-kslog = "1.6.1"
+microutils = "0.32.0"
+kslog = "2.1.0"
 
 dexcount = "4.0.0"
 junit_version = "4.13.2"
