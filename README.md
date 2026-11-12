@@ -1,228 +1,98 @@
-# How to use
+# kroles
 
-That is a template for Kotlin Multiplatform Projects. How to use it:
+kroles is a Kotlin Multiplatform library for modelling roles, assigning them to subjects, and checking access through role hierarchies. It provides plain string roles, read/write/manage permissions, repository interfaces and implementations, and Ktor client/server integration.
 
-* Create your repository from this template
-* Add `local.properties` file in case you plan to use `Android` target (you must set up location of SDK, it will not be tracked by `git` and it is correct behaviour). In the snippet below you may see approximate content of `local.properties` file:
-```properties
-## This file must *NOT* be checked into Version Control Systems,
-# as it contains information specific to your local configuration.
-#
-# Location of the SDK. This is only used by Gradle.
-# For customization when using a Version Control System, please read the
-# header note.
-sdk.dir=/your/path/to/android/sdk
-```
-* Replace in a whole project `project_group` by your group
-* Replace in a whole project `project_name` by your **ROOT** project name
-* Update your subproject packages. It is not critical, but recommended especially in case you plan to publish your
-  library
+## Installation
 
-## Subprojects
+Add Maven Central and the module you need. For a Kotlin Multiplatform project, put the dependency in `commonMain`:
 
-In this template there is only one subproject with name `lib`. You are always able to rename it, but remember that in
-this case you must rename it in `settings.gradle` file.
+```kotlin
+repositories {
+    mavenCentral()
+}
 
-## JVM sources in Android target
-
-By default JVM code is not included in Android target. In case you wish to include JVM sources in Android build, use
-next method in the `sourceSets` section of your `build.gradle`:
-
-```groovy
 kotlin {
     sourceSets {
-        // Some other code
-        androidMain {
-            // Some other code (like dependencies)
-            dependsOn jvmMain
+        commonMain.dependencies {
+            implementation("dev.inmo:kroles.repos:0.0.4")
         }
     }
 }
 ```
 
-In case when you need to be sure that JVM sources are not included in Android part, just remove line with `dependsOn jvmMain`
+In a Kotlin/JVM project, use the same coordinate in the regular `dependencies` block:
 
-## Types of projects
-
-### `mppProjectWithSerialization`
-
-This type of preset have `JVM`, `JS` and `Android` targets and available using
-`apply from: "$mppProjectWithSerialization"`. Template for project with this preset looks like next snippet:
-
-```groovy
-plugins {
-    id "org.jetbrains.kotlin.multiplatform"
-    id "org.jetbrains.kotlin.plugin.serialization"
-    id "com.android.kotlin.multiplatform.library"
-}
-
-apply from: "$mppProjectWithSerialization"
-
-// The code below is optional
-
-kotlin {
-    sourceSets {
-        commonMain {
-            dependencies {
-                // common dependencies
-            }
-        }
-        commonTest {
-            dependencies {
-                // common test dependencies
-            }
-        }
-        jvmMain {
-            dependencies {
-                // jvm dependencies
-            }
-        }
-        jvmTest {
-            dependencies {
-                // jvm test dependencies
-            }
-        }
-        jsMain {
-            dependencies {
-                // js dependencies
-            }
-        }
-        jsTest {
-            dependencies {
-                // js test dependencies
-            }
-        }
-        androidMain {
-            dependencies {
-                // android dependencies
-            }
-        }
-        androidTest {
-            dependencies {
-                // android test dependencies
-            }
-        }
-    }
+```kotlin
+dependencies {
+    implementation("dev.inmo:kroles.repos:0.0.4")
 }
 ```
 
-### `mppJavaProject`
+The examples use `0.0.4`, the version in [gradle.properties](gradle.properties). All library artifacts use the `dev.inmo` group. Choose an artifact from the table below; higher-level modules expose their kroles dependencies transitively, so `kroles.repos` already includes `kroles.roles`.
 
-This type of preset have only `JVM` target and available using `apply from: "$mppJavaProject"`. Template for
-project with this preset looks like next snippet:
+## Modules
 
-```groovy
-plugins {
-    id "org.jetbrains.kotlin.multiplatform"
-}
+| Module and documentation | Artifact | Purpose | Targets |
+| --- | --- | --- | --- |
+| [Roles](roles/README.md) | `kroles.roles` | Role values, read/write/manage permissions, and permission checkers | JVM, JS, Android |
+| [Repositories](repos/README.md) | `kroles.repos` | Subjects, role inheritance, key-value storage, caching, and write protection | JVM, JS, Android |
+| [Ktor protocol](repos/ktor/README.md) | `kroles.repos.ktor` | Shared route names, query parameters, and serializable request bodies | JVM, JS, Android |
+| [Ktor client](repos/ktor/client/README.md) | `kroles.repos.ktor.client` | Remote repository access through HTTP and WebSocket event flows | JVM, JS, Android |
+| [Ktor server](repos/ktor/server/README.md) | `kroles.repos.ktor.server` | Repository routes and access-check response helpers | JVM |
 
-apply from: "$mppJavaProject"
+JS modules target browsers and Node.js. JVM builds use JDK 17; Android modules have a minimum SDK of 21. Add the server dependency to a JVM project or a Multiplatform project's `jvmMain` source set.
 
-// The code below is optional
+## Assign roles and check access
 
-kotlin {
-    sourceSets {
-        commonMain {
-            dependencies {
-                // common dependencies
-            }
-        }
-        commonTest {
-            dependencies {
-                // common test dependencies
-            }
-        }
-        jvmMain {
-            dependencies {
-                // jvm dependencies
-            }
-        }
-        jvmTest {
-            dependencies {
-                // jvm test dependencies
-            }
-        }
-    }
-}
-```
+A `BaseRole` wraps a string. A `BaseRoleSubject` is either a direct identifier, such as a user ID, or another role. Granting a permission to a role lets its holders inherit that permission.
 
-### `mppJsProject`
+`KeyValueRolesRepo()` provides an in-memory repository using the default MicroUtils map store. Repository operations are suspending functions:
 
-This type of preset have only `JS` target and available using `apply from: "$mppJsProject"`. Template for
-project with this preset looks like next snippet:
+```kotlin
+import dev.inmo.kroles.repos.BaseRoleSubject
+import dev.inmo.kroles.repos.isAccessAllowed
+import dev.inmo.kroles.repos.kv.roles.KeyValueRolesRepo
+import dev.inmo.kroles.roles.BaseRole
+import dev.inmo.kroles.roles.rwm.RWMRole
+import dev.inmo.kroles.roles.rwm.RightsChecker
 
-```groovy
-plugins {
-    id "org.jetbrains.kotlin.multiplatform"
-}
+suspend fun main() {
+    val repo = KeyValueRolesRepo()
+    val alice = BaseRoleSubject("alice")
+    val reader = BaseRole("reader")
+    val readArticles = RWMRole(
+        prefix = "articles",
+        rights = RWMRole.AccessRights(read = true)
+    ).role
 
-apply from: "$mppJsProject"
+    // A reader can read articles; Alice is a reader.
+    check(repo.includeDirect(BaseRoleSubject(reader), readArticles))
+    check(repo.includeDirect(alice, reader))
 
-// The code below is optional
+    check(repo.getDirectRoles(alice) == listOf(reader))
+    check(readArticles in repo.getAllRoles(alice))
+    check(repo.isAccessAllowed(alice, "articles", RightsChecker { it.r }))
 
-kotlin {
-    sourceSets {
-        commonMain {
-            dependencies {
-                // common dependencies
-            }
-        }
-        commonTest {
-            dependencies {
-                // common test dependencies
-            }
-        }
-        jsMain {
-            dependencies {
-                // jvm dependencies
-            }
-        }
-        jsTest {
-            dependencies {
-                // jvm test dependencies
-            }
-        }
-    }
+    check(repo.excludeDirect(alice, reader))
+    check(!repo.isAccessAllowed(alice, "articles", RightsChecker { it.r }))
 }
 ```
 
-### `mppAndroidProject`
+Use `getDirectRoles(subject)` for immediate grants and `getAllRoles(subject)` for inherited grants. The key-value implementation's `contains(subject, role)` checks direct grants; use `role in repo.getAllRoles(subject)` when inheritance matters.
 
-This type of preset have only `Android` target and available using `apply from: "$mppAndroidProject"`. Template for
-project with this preset looks like next snippet:
+`RWMRole` represents `prefix.rights[.identifier]`, for example `articles.rw.42`. The flags are `r` (read), `w` (write), and `m` (manage); an optional identifier scopes the permission to an entity. The example uses explicit `AccessRights` and a custom `RightsChecker`. See the [roles guide](roles/README.md) for scoped permissions, checker composition, and current convenience-overload limitations.
 
-```groovy
-plugins {
-    id "org.jetbrains.kotlin.multiplatform"
-    id "com.android.kotlin.multiplatform.library"
-}
+## Integrations
 
-apply from: "$mppAndroidProject"
+**MicroUtils repositories.** `KeyValueRolesRepo` accepts a `KeyValuesRepo<BaseRoleSubject, BaseRole>`, allowing an application to supply its storage backend. Separate read/write adapters and subject protection policies are available. `CacheRolesRepo` keeps a snapshot of a backing repository's hierarchy and refreshes it after changes. See the [repository guide](repos/README.md) for setup and differences between implementations.
 
-// The code below is optional
+**Ktor server.** Register `configureRolesRepoRoutes(repo)` under your application's routing to expose the repository at `/roles`. Read and write routes can also be registered separately. The application configures serialization, WebSockets, authentication, and authorization. Access-check helpers are available for application routes. See the [server guide](repos/ktor/server/README.md).
 
-kotlin {
-    sourceSets {
-        commonMain {
-            dependencies {
-                // common dependencies
-            }
-        }
-        commonTest {
-            dependencies {
-                // common test dependencies
-            }
-        }
-        androidMain {
-            dependencies {
-                // android dependencies
-            }
-        }
-        androidTest {
-            dependencies {
-                // android test dependencies
-            }
-        }
-    }
-}
-```
+**Ktor client.** `KtorRolesRepo(client, rootPath)` implements the same `RolesRepo` interface using a configured `HttpClient`. Queries and mutations use HTTP; `roleIncluded`, `roleExcluded`, `roleCreated`, and `roleRemoved` expose WebSocket event streams. See the [client guide](repos/ktor/client/README.md) for dependencies, client configuration, and current interoperability limitations.
+
+**Kotlin serialization and coroutines.** Role values, subjects, and Ktor request wrappers are serializable. Repository calls use `suspend`, while change notifications use `Flow`. The [shared Ktor protocol](repos/ktor/README.md) documents the route and payload contract for integrating other clients.
+
+## Project links
+
+- [Changelog](CHANGELOG.md)
+- [MIT license](LICENSE)
