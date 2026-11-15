@@ -47,24 +47,24 @@ fun interface RightsChecker {
      */
     @Serializable
     @JvmInline
-    value class RMW(private val rights: RWMRole.AccessRights) : RightsChecker {
+    value class Default(private val rights: RWMRole.AccessRights) : RightsChecker {
         override suspend fun invoke(rights: RWMRole.AccessRights): Boolean = rights in this.rights
         override suspend fun invoke(rights: String): Boolean = invoke(RWMRole.AccessRights(rights))
     }
 
     companion object {
         /**
-         * Creates a [RMW] checker for the given required [rights].
+         * Creates a [Default] checker for the given required [rights].
          */
-        operator fun invoke(rights: RWMRole.AccessRights) = RMW(rights)
+        operator fun invoke(rights: RWMRole.AccessRights) = Default(rights)
         /**
-         * Creates a [RMW] checker from a raw rights [rights] string.
+         * Creates a [Default] checker from a raw rights [rights] string.
          */
         operator fun invoke(rights: String) = invoke(RWMRole.AccessRights(rights))
         /**
-         * Creates a [RMW] checker from the individual read/write/manage flags.
+         * Creates a [Default] checker from the individual read/write/manage flags.
          */
-        operator fun invoke(read: Boolean, write: Boolean, manage: Boolean) = RMW(
+        operator fun invoke(read: Boolean, write: Boolean, manage: Boolean) = Default(
             RWMRole.AccessRights(
                 read,
                 write,

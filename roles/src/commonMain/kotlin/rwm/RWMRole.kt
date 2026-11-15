@@ -6,10 +6,14 @@ import kotlin.jvm.JvmInline
 import kotlin.jvm.JvmName
 
 /**
- * Role with form "prefix.rmw.identifier", where "prefix" is an identifier of role, r - read access, w - write access,
- * m - manage access, and "identifier" is optional id for granulating of access rights.
+ * Role represented as `prefix.rights[.identifier]`.
  *
- * @sample "groups.rw.10" should give access for reading and writing in the group with id 10
+ * The [prefix] identifies the role category, and [rights] use `r` for read, `w` for write and `m` for manage
+ * access. These flags are independent; manage access does not imply read or write access.
+ * The optional [identifier] scopes the role to an entity and includes everything after the second dot.
+ * For example, `groups.rw.10` represents read and write access to the group with identifier `10`.
+ *
+ * Wrapping a [BaseRole] does not validate or normalize its contents.
  */
 @Serializable
 @JvmInline
@@ -20,17 +24,20 @@ value class RWMRole internal constructor(
     val role: BaseRole
 ) {
     /**
-     * The raw rights segment (the part between the first and second dot) or null when it is absent or blank.
+     * Raw text between the first and second dots, or the remaining text when there is no second dot.
+     * Returns null when the text after the first dot is absent or blank. If that text starts with another
+     * dot, returns an empty string instead.
      */
     internal val rightsStringNullable: String?
         get() = role.plain.dropWhile { it != '.' }.removePrefix(".").takeIf { it.isNotBlank() } ?.takeWhile { it != '.' }
     /**
-     * Parsed [AccessRights] built from the rights segment (empty rights when the segment is missing).
+     * Rights backed by the raw rights segment, or an empty string when it is missing.
+     * Only lowercase `r`, `w` and `m` affect the access flags; other characters are preserved.
      */
     val rights
         get() = AccessRights(rightsStringNullable ?: "")
     /**
-     * String form of the current [rights] (the r/w/m flags).
+     * Raw string backing [rights], without filtering, reordering or deduplicating characters.
      */
     val rightsString: String
         get() = rights.string
@@ -55,7 +62,8 @@ value class RWMRole internal constructor(
     val manageAccess: Boolean
         get() = rights.m
     /**
-     * Optional granularity [Identifier] (the segment after the second dot) or null when absent or blank.
+     * Entity identifier containing everything after the second dot, including any further dots.
+     * Returns null when that text is absent or blank.
      */
     val identifier: Identifier?
         get() {
@@ -73,9 +81,10 @@ value class RWMRole internal constructor(
         }
 
     /**
-     * Encodes the read/write/manage access flags as a string containing the r, w and/or m characters.
+     * Read/write/manage flags backed by a string. Each flag is set when its lowercase character occurs
+     * anywhere in [string]; unrecognized characters do not grant access.
      *
-     * @property string Raw flag string composed of the r/w/m access characters.
+     * @property string Raw rights text, preserved as supplied.
      */
     @Serializable
     @JvmInline
@@ -96,7 +105,7 @@ value class RWMRole internal constructor(
         val m: Boolean
             get() = string.contains(MANAGE_ACCESS)
         /**
-         * Builds an [AccessRights] from the individual read/write/manage flags.
+         * Builds rights from independent flags, writing enabled characters once each in `rwm` order.
          */
         constructor(
             read: Boolean = false,
@@ -150,7 +159,7 @@ value class RWMRole internal constructor(
     }
 
     /**
-     * Optional identifier segment used to granulate access rights to a specific entity.
+     * Identifier used to scope access rights to a specific entity.
      *
      * @property string Raw identifier value.
      */
@@ -197,39 +206,65 @@ value class RWMRole internal constructor(
         } ?: false
 
         /**
-         * Convenience overload of checkRights that builds the checker from a required [AccessRights] value.
+         * Delegates to [AccessChecker.RWM] using [requiredPrefix], [requiredRight] and [identifier].
+         *
+         * A null [identifier] accepts any role identifier. A non-null identifier requires an exact match,
+         * so a role without an identifier fails that check. The role's flags must be a subset of
+         * [requiredRight], as evaluated by [RightsChecker.Default].
+         *
+         * @see AccessChecker.RWM
          */
+        @Deprecated(
+            "Use `AccessChecker` instead",
+            ReplaceWith(
+                "AccessChecker.RWM(requiredPrefix, requiredRight, identifier).check(roleToCheck)",
+                "dev.inmo.kroles.roles.rwm.AccessChecker"
+            )
+        )
         suspend fun checkRights(
             roleToCheck: BaseRole,
             requiredPrefix: String,
             requiredRight: AccessRights,
             identifier: Identifier? = null
-        ) = checkRights(
-            roleToCheck = roleToCheck,
-            requiredPrefix = requiredPrefix,
-            identifier = identifier,
-            accessChecker = RightsChecker(requiredRight)
-        )
+        ) = AccessChecker.RWM(
+            prefix = requiredPrefix,
+            accessRights = requiredRight,
+            identifier = identifier
+        ).check(roleToCheck)
 
         /**
-         * Convenience overload of checkRights that builds the required rights from the individual read/write/manage flags.
+         * Delegates to [AccessChecker.RWM] using [requiredPrefix] and rights built from [read], [write] and [manage].
+         *
+         * A null [identifier] accepts any role identifier; otherwise the identifier must match exactly.
+         * The role's flags must be a subset of the supplied flags, as evaluated by [RightsChecker.Default].
+         *
+         * @see AccessChecker.RWM
          */
+        @Deprecated(
+            "Use `AccessChecker` instead",
+            ReplaceWith(
+                "AccessChecker.RWM(requiredPrefix, read, write, manage, identifier).check(roleToCheck)",
+                "dev.inmo.kroles.roles.rwm.AccessChecker"
+            )
+        )
         suspend fun checkRights(
             roleToCheck: BaseRole,
             requiredPrefix: String,
             read: Boolean = false,
-            manage: Boolean = false,
             write: Boolean = false,
+            manage: Boolean = false,
             identifier: Identifier? = null
-        ) = checkRights(
-            roleToCheck,
-            requiredPrefix,
-            AccessRights(read = read, write = write, manage = manage),
-            identifier
-        )
+        ) = AccessChecker.RWM(
+            prefix = requiredPrefix,
+            read = read,
+            write = write,
+            manage = manage,
+            identifier = identifier
+        ).check(roleToCheck)
 
         /**
-         * Parses [role] into an [RWMRole] or returns null when it does not have a valid rights segment.
+         * Wraps [role] as an [RWMRole], or returns null when [rightsStringNullable] is null.
+         * Does not validate the prefix, identifier or characters in the rights segment.
          */
         operator fun invoke(
             role: String
@@ -237,7 +272,7 @@ value class RWMRole internal constructor(
 
 
         /**
-         * Builds an [RWMRole] from a [prefix], [rights] and an optional [identifier].
+         * Builds `prefix.rights[.identifier]` from the supplied values without validation or escaping.
          */
         operator fun invoke(
             prefix: String,

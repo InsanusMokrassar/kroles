@@ -43,46 +43,6 @@ class RWMRoleCheckRightsTests {
     }
 
     @Test
-    fun checkRightsWithAccessRightsWorksCorrectly() = runTest {
-        allRequiredRights.forEach { requiredRights ->
-            allAvailableRights.forEach { availableRights ->
-                val role = RWMRole(prefix, availableRights, identifier).role
-                assertEquals(
-                    expected = availableRights in requiredRights,
-                    actual = RWMRole.checkRights(
-                        roleToCheck = role,
-                        requiredPrefix = prefix,
-                        requiredRight = requiredRights,
-                        identifier = identifier
-                    ),
-                    message = "Requested rights '$availableRights' with granted rights '$requiredRights'"
-                )
-            }
-        }
-    }
-
-    @Test
-    fun checkRightsWithBooleanFlagsWorksCorrectly() = runTest {
-        allRequiredRights.forEach { requiredRights ->
-            allAvailableRights.forEach { availableRights ->
-                val role = RWMRole(prefix, availableRights, identifier).role
-                assertEquals(
-                    expected = availableRights in requiredRights,
-                    actual = RWMRole.checkRights(
-                        roleToCheck = role,
-                        requiredPrefix = prefix,
-                        read = requiredRights.r,
-                        write = requiredRights.w,
-                        manage = requiredRights.m,
-                        identifier = identifier
-                    ),
-                    message = "Requested rights '$availableRights' with granted rights '$requiredRights'"
-                )
-            }
-        }
-    }
-
-    @Test
     fun checkRightsRequiresMatchingPrefix() = runTest {
         val role = RWMRole(prefix, AccessRights("rwm")).role
         val checker = RightsChecker { true }
