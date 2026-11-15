@@ -4,7 +4,7 @@ import dev.inmo.kroles.roles.BaseRole
 
 
 /**
- * Returns true when any role in the list grants the [accessCheck] access for the given [prefix] and [identifier].
+ * Returns true when a role with the exact [prefix] and [identifier] passes [accessCheck].
  */
 suspend fun List<BaseRole>.isIdentifierAllowed(
     prefix: String,

@@ -188,11 +188,13 @@ value class RWMRole internal constructor(
         const val WRITE_ACCESS = "w"
 
         /**
-         * Checks that [roleToCheck] is an RWM role with the given [requiredPrefix], an identifier that is either absent or
-         * equal to [identifier], and rights accepted by [accessChecker]. Returns false when [roleToCheck] is not an RWM role.
+         * Checks [requiredPrefix] and [identifier] using [AccessChecker.RWM], then checks the role's rights
+         * with [accessChecker]. A null [identifier] accepts any role identifier; otherwise an exact match
+         * is required, including rejection of roles without an identifier. Unparseable roles return false.
          *
          * @return True when all conditions are satisfied.
          */
+        @Deprecated("Use AccessChecker instead")
         suspend fun checkRights(
             roleToCheck: BaseRole,
             requiredPrefix: String,
@@ -200,8 +202,7 @@ value class RWMRole internal constructor(
             accessChecker: RightsChecker
         ) = roleToCheck.rwmRoleOrNull()?.let {
             val rightsString = it.rightsStringNullable ?: return@let false
-            it.prefix == requiredPrefix
-                    && (it.identifier == null || it.identifier == identifier)
+            AccessChecker.RWM(prefix = requiredPrefix, identifier = identifier).check(it)
                     && accessChecker(rightsString)
         } ?: false
 

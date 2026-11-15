@@ -4,6 +4,9 @@ import dev.inmo.kroles.roles.rwm.RWMRole
 import dev.inmo.kroles.roles.rwm.RWMRole.AccessRights
 import dev.inmo.kroles.roles.rwm.RWMRole.Identifier
 import dev.inmo.kroles.roles.rwm.RightsChecker
+import dev.inmo.kroles.roles.rwm.AccessChecker
+import dev.inmo.kroles.roles.rwm.isAccessAllowed
+import dev.inmo.kroles.roles.rwm.isIdentifierAllowed
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -19,6 +22,26 @@ class RWMRoleCheckRightsTests {
     private val allAvailableRights = availableToRequiredRights.map { AccessRights(it.first) }
     private val prefix = "groups"
     private val identifier = Identifier("42")
+
+    @Suppress("DEPRECATION")
+    @Test
+    fun legacyOverloadsAndListHelpersAgreeWithAccessChecker() = runTest {
+        listOf("groups.r", "groups.r.42", "groups.r.43", "groups.rw.42", "users.r.42", "groups.").forEach { raw ->
+            val role = BaseRole(raw)
+            listOf(null, identifier, Identifier("43")).forEach { requestedIdentifier ->
+                val granted = AccessRights(read = true)
+                val expected = AccessChecker.RWM(prefix, granted, requestedIdentifier).check(role)
+                assertEquals(expected, RWMRole.checkRights(role, prefix, requestedIdentifier, RightsChecker(granted)))
+                assertEquals(expected, RWMRole.checkRights(role, prefix, granted, requestedIdentifier))
+                assertEquals(expected, RWMRole.checkRights(role, prefix, read = true, identifier = requestedIdentifier))
+                assertEquals(expected, if (requestedIdentifier == null) {
+                    listOf(role).isAccessAllowed(prefix, read = true)
+                } else {
+                    listOf(role).isIdentifierAllowed(prefix, requestedIdentifier, read = true)
+                })
+            }
+        }
+    }
 
     @Test
     fun checkRightsWithAccessCheckerWorksCorrectly() = runTest {
@@ -58,16 +81,16 @@ class RWMRoleCheckRightsTests {
 
         assertTrue(RWMRole.checkRights(role, prefix, identifier, checker))
         assertFalse(RWMRole.checkRights(role, prefix, Identifier("43"), checker))
-        assertFalse(RWMRole.checkRights(role, prefix, accessChecker = checker))
+        assertTrue(RWMRole.checkRights(role, prefix, accessChecker = checker))
     }
 
     @Test
-    fun checkRightsAcceptsAnyIdentifierForGlobalRole() = runTest {
+    fun checkRightsRequiresUnscopedRequestForGlobalRole() = runTest {
         val role = RWMRole(prefix, AccessRights("rwm")).role
         val checker = RightsChecker { true }
 
-        assertTrue(RWMRole.checkRights(role, prefix, identifier, checker))
-        assertTrue(RWMRole.checkRights(role, prefix, Identifier("43"), checker))
+        assertFalse(RWMRole.checkRights(role, prefix, identifier, checker))
+        assertFalse(RWMRole.checkRights(role, prefix, Identifier("43"), checker))
         assertTrue(RWMRole.checkRights(role, prefix, accessChecker = checker))
     }
 

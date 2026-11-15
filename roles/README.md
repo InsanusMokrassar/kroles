@@ -50,7 +50,7 @@ Parsing is also available through `RWMRole("documents.rw.42")` and the top-level
 
 ## Checking permissions
 
-Checks are suspending functions. A matching role must have the exact prefix, pass the supplied `RightsChecker`, and either have no identifier or match the requested identifier.
+Checks are suspending functions. A matching role must have the exact prefix and pass the supplied `RightsChecker`. A supplied identifier requires an exact match; a null identifier accepts both scoped and unscoped roles.
 
 ```kotlin
 import dev.inmo.kroles.roles.rwm.RWMRole
@@ -79,7 +79,7 @@ suspend fun checkDocumentPermissions() {
 
     check(roles.isIdentifierAllowed("documents", documentId, canEdit))
     check(roles.isAccessAllowed("documents", canRead))
-    check(!roles.isAccessAllowed("documents", canWrite))
+    check(roles.isAccessAllowed("documents", canWrite))
     check(roles.getAllowedIdentifiers("documents", canWrite) == listOf(documentId))
     check(roles.getAllowedIdentifiers("documents", canRead) == null)
 }
@@ -89,8 +89,8 @@ The list helpers have these semantics:
 
 | Helper | Behavior |
 | --- | --- |
-| `isIdentifierAllowed` | Accepts any matching role for the requested identifier, including a role without an identifier. |
-| `isAccessAllowed` | Requires a matching role **without** an identifier; a grant for one document does not grant access to all documents. |
+| `isIdentifierAllowed` | Requires a matching role with exactly the requested identifier; roles without an identifier do not qualify. |
+| `isAccessAllowed` | Accepts a matching role with any identifier, including an absent one. |
 | `getAllowedIdentifiers` | Returns matching identifiers, an empty list if none qualify, or `null` if a qualifying role has no identifier (unrestricted identifiers). |
 | `includesBaseRole` | Uses permission checks for a parsed RWM role and exact list membership for other roles. |
 
@@ -100,4 +100,4 @@ The list helpers have these semantics:
 
 For `AccessRights`, `+` unions flags, `*` intersects flags, and `-` removes flags. For `RightsChecker`, `+` means OR, `*` means AND, and `!` negates a checker. Checker composition applies to the rights of a single role.
 
-The default `RightsChecker` requires every requested access flag to be present in the checked rights. For example, `RightsChecker("w")` rejects read-only rights.
+The default `RightsChecker` stores granted rights and accepts a request only when every requested flag is present in those grants. For example, `RightsChecker("r")("rw")` returns `false`, while `RightsChecker("rw")("r")` returns `true`. The list helpers pass each stored role's rights as the request to this checker; their string/flag overloads therefore accept roles whose flags are a subset of the supplied flags.

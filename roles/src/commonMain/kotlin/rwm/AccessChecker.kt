@@ -1,7 +1,6 @@
 package dev.inmo.kroles.roles.rwm
 
 import dev.inmo.kroles.roles.BaseRole
-import dev.inmo.kroles.roles.rwm.RWMRole.Identifier
 import kotlinx.serialization.Serializable
 
 /**
@@ -87,7 +86,7 @@ fun interface AccessChecker {
                 read: Boolean = false,
                 write: Boolean = false,
                 manage: Boolean = false,
-                identifier: Identifier? = null
+                identifier: RWMRole.Identifier? = null
             ) = RWM(
                 prefix = prefix,
                 accessRights = RWMRole.AccessRights(
