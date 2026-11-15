@@ -9,8 +9,7 @@ import kotlin.jvm.JvmInline
  * @property plain The raw string representation of the role.
  */
 @Serializable
-@JvmInline
-value class BaseRole(
+data class BaseRole(
     val plain: String
 ) {
     companion object {

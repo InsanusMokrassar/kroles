@@ -16,13 +16,11 @@ repositories {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("dev.inmo:kroles.roles:0.0.4")
+            implementation("dev.inmo:kroles.roles:0.0.5")
         }
     }
 }
 ```
-
-`0.0.4` is the version configured in this repository. The module targets JVM (Java 17), JavaScript IR (browser and Node.js), and Android (minimum SDK 21).
 
 ## Role values
 
@@ -98,11 +96,8 @@ The list helpers have these semantics:
 
 `RWMRole.checkRights` checks a single `BaseRole`. List checks succeed if one role passes; they do not combine rights from different roles. For example, separate `documents.r.42` and `documents.w.42` roles do not satisfy `canRead * canWrite`.
 
-## Composition and current caveats
+## Composition
 
 For `AccessRights`, `+` unions flags, `*` intersects flags, and `-` removes flags. For `RightsChecker`, `+` means OR, `*` means AND, and `!` negates a checker. Checker composition applies to the rights of a single role.
 
-The current implementation has two caveats relevant to authorization:
-
-- The default `RightsChecker` factories use `AccessRights.contains`, whose Boolean expression does not enforce all requested flags. For example, `RightsChecker("w")` accepts read-only rights. This also affects list overloads taking a string or Boolean flags and RWM checks through `includesBaseRole`. Use explicit checker lambdas as above for permission decisions.
-- The Boolean overloads of the `RWMRole` factory and `RWMRole.checkRights` swap write and manage when constructing `AccessRights`. Use the factory overload taking an explicit `AccessRights` value and the check overload taking a custom `RightsChecker`.
+The default `RightsChecker` requires every requested access flag to be present in the checked rights. For example, `RightsChecker("w")` rejects read-only rights.

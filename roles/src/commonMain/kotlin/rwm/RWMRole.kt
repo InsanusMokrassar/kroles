@@ -2,7 +2,6 @@ package dev.inmo.kroles.roles.rwm
 
 import dev.inmo.kroles.roles.BaseRole
 import kotlinx.serialization.Serializable
-import kotlin.js.JsName
 import kotlin.jvm.JvmInline
 import kotlin.jvm.JvmName
 
@@ -140,9 +139,11 @@ value class RWMRole internal constructor(
         fun isEmpty() = !r && !w && !m
 
         /**
-         * Checks whether the required [rights] are satisfied by this set of flags.
+         * Returns true when this rights set grants every access flag requested by [requested].
+         *
+         * @param requested The access rights that must be present in this set.
          */
-        operator fun contains(rights: AccessRights) = !r || rights.r && !w || rights.w && !m || rights.m
+        infix operator fun contains(requested: AccessRights) = (requested.r == false || r) && (!requested.w || w) && (!requested.m || m)
         override fun toString(): String {
             return string
         }
@@ -167,28 +168,28 @@ value class RWMRole internal constructor(
         /**
          * Character marking read access in a rights string.
          */
-        val READ_ACCESS = "r"
+        const val READ_ACCESS = "r"
         /**
          * Character marking manage access in a rights string.
          */
-        val MANAGE_ACCESS = "m"
+        const val MANAGE_ACCESS = "m"
         /**
          * Character marking write access in a rights string.
          */
-        val WRITE_ACCESS = "w"
+        const val WRITE_ACCESS = "w"
 
         /**
-         * Checks that [role] is an RWM role with the given [requiredPrefix], an identifier that is either absent or
-         * equal to [identifier], and rights accepted by [accessChecker]. Returns false when [role] is not an RWM role.
+         * Checks that [roleToCheck] is an RWM role with the given [requiredPrefix], an identifier that is either absent or
+         * equal to [identifier], and rights accepted by [accessChecker]. Returns false when [roleToCheck] is not an RWM role.
          *
          * @return True when all conditions are satisfied.
          */
         suspend fun checkRights(
-            role: BaseRole,
+            roleToCheck: BaseRole,
             requiredPrefix: String,
             identifier: Identifier? = null,
             accessChecker: RightsChecker
-        ) = role.rwmRoleOrNull()?.let {
+        ) = roleToCheck.rwmRoleOrNull()?.let {
             val rightsString = it.rightsStringNullable ?: return@let false
             it.prefix == requiredPrefix
                     && (it.identifier == null || it.identifier == identifier)
@@ -199,31 +200,31 @@ value class RWMRole internal constructor(
          * Convenience overload of checkRights that builds the checker from a required [AccessRights] value.
          */
         suspend fun checkRights(
-            role: BaseRole,
+            roleToCheck: BaseRole,
             requiredPrefix: String,
             requiredRight: AccessRights,
             identifier: Identifier? = null
         ) = checkRights(
-            role,
-            requiredPrefix,
-            identifier,
-            RightsChecker(requiredRight)
+            roleToCheck = roleToCheck,
+            requiredPrefix = requiredPrefix,
+            identifier = identifier,
+            accessChecker = RightsChecker(requiredRight)
         )
 
         /**
          * Convenience overload of checkRights that builds the required rights from the individual read/write/manage flags.
          */
         suspend fun checkRights(
-            role: BaseRole,
+            roleToCheck: BaseRole,
             requiredPrefix: String,
             read: Boolean = false,
             manage: Boolean = false,
             write: Boolean = false,
             identifier: Identifier? = null
         ) = checkRights(
-            role,
+            roleToCheck,
             requiredPrefix,
-            AccessRights(read, manage, write),
+            AccessRights(read = read, write = write, manage = manage),
             identifier
         )
 
@@ -272,7 +273,7 @@ value class RWMRole internal constructor(
             write: Boolean,
             identifier: Identifier? = null
         ): RWMRole = invoke(
-            prefix, AccessRights(read, manage, write), identifier
+            prefix, AccessRights(read = read, write = write, manage = manage), identifier
         )
 
         /**
