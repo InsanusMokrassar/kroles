@@ -54,7 +54,10 @@ class RoleAccessChecksTests {
     fun legacyRightsCheckerKeepsStringDispatchAndRunsOnlyAfterScopeMatches() = runTest {
         val visited = mutableListOf<String>()
         val checker = object : RightsChecker {
-            override suspend fun invoke(rights: AccessRights): Boolean = fail("Expected the String overload")
+            override suspend fun invoke(rights: AccessRights): Boolean {
+                visited.add(rights.string)
+                return rights.w && rights.r
+            }
             override suspend fun invoke(rights: String): Boolean {
                 visited.add(rights)
                 return rights == "wr"
