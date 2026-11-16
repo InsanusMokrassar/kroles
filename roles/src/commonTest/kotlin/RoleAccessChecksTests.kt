@@ -5,6 +5,7 @@ import dev.inmo.kroles.roles.rwm.RWMRole
 import dev.inmo.kroles.roles.rwm.RWMRole.AccessRights
 import dev.inmo.kroles.roles.rwm.RWMRole.Identifier
 import dev.inmo.kroles.roles.rwm.RightsChecker
+import dev.inmo.kroles.roles.rwm.getAllowedIdentifiers
 import dev.inmo.kroles.roles.rwm.isAccessAllowed
 import dev.inmo.kroles.roles.rwm.isIdentifierAllowed
 import kotlinx.coroutines.test.runTest
@@ -76,5 +77,41 @@ class RoleAccessChecksTests {
         visited.clear()
         assertFalse(roles.isIdentifierAllowed("groups", Identifier("44"), checker))
         assertTrue(visited.isEmpty())
+    }
+
+    @Test
+    fun identifierCheckDoesNotBypassCustomStringValidation() = runTest {
+        val checker = exactStringRightsChecker()
+        val identifier = Identifier("42")
+        val rejectedRoles = listOf(BaseRole("groups.wrx.42"))
+
+        assertTrue(checker(AccessRights("wrx")))
+        assertFalse(checker("wrx"))
+        assertTrue(listOf(BaseRole("groups.wr.42")).isIdentifierAllowed("groups", identifier, checker))
+        assertEquals(emptyList<Identifier>(), rejectedRoles.getAllowedIdentifiers("groups", checker))
+        assertTrue(
+            rejectedRoles.isIdentifierAllowed("groups", identifier, checker),
+            "isIdentifierAllowed must reject 'wrx' denied by the custom RightsChecker.invoke(String)"
+        )
+    }
+
+    @Test
+    fun accessCheckDoesNotBypassCustomStringValidation() = runTest {
+        val checker = exactStringRightsChecker()
+        val rejectedRoles = listOf(BaseRole("groups.wrx"))
+
+        assertTrue(checker(AccessRights("wrx")))
+        assertFalse(checker("wrx"))
+        assertTrue(listOf(BaseRole("groups.wr")).isAccessAllowed("groups", checker))
+        assertEquals(emptyList<Identifier>(), rejectedRoles.getAllowedIdentifiers("groups", checker))
+        assertTrue(
+            rejectedRoles.isAccessAllowed("groups", checker),
+            "isAccessAllowed must reject 'wrx' denied by the custom RightsChecker.invoke(String)"
+        )
+    }
+
+    private fun exactStringRightsChecker() = object : RightsChecker {
+        override suspend fun invoke(rights: AccessRights): Boolean = rights.r && rights.w
+        override suspend fun invoke(rights: String): Boolean = rights == "wr"
     }
 }

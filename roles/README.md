@@ -29,6 +29,10 @@ kotlin {
 - `RWMRole.AccessRights` holds independent `r`, `w`, and `m` flags. Manage does not automatically imply read or write.
 - `RWMRole.Identifier` wraps the identifier string. Construct roles with a string identifier and obtain the typed value through `.identifier`.
 
+Standard RWM checks (`AccessRights.contains`, `RightsChecker.Default` and `AccessChecker.RWM`) use only the presence of lowercase `r`, `w` and `m` in the rights segment. Character order and repetitions do not matter; other characters such as `x` are ignored. Thus `rw`, `wr`, `rrw` and `wrx` all mean read and write access without manage access.
+
+Kotlin `==` and hash codes for `AccessRights` use the access flags, so the rights parsed from `documents.rw` and `documents.wr` compare equal. The original rights string is preserved and serialized as a plain string without normalization.
+
 `BaseRole`, `RWMRole`, `AccessRights`, and `Identifier` support Kotlin serialization. Build an RWM role with an explicit `AccessRights` value, then use `.role` when an API expects `BaseRole`:
 
 ```kotlin

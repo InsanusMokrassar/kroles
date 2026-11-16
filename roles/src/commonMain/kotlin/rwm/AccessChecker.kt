@@ -2,6 +2,7 @@ package dev.inmo.kroles.roles.rwm
 
 import dev.inmo.kroles.roles.BaseRole
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
 /**
  * Suspended predicate that decides whether a role passes an access check.
@@ -63,6 +64,7 @@ fun interface AccessChecker {
         val accessRights: RWMRole.AccessRights? = null,
         val identifier: RWMRole.Identifier? = null,
     ) : AccessChecker {
+        @Transient
         private val rightsChecker = accessRights ?.let { RightsChecker(it) }
         override suspend fun check(role: BaseRole): Boolean {
             return check(role.rwmRoleOrNull() ?: return false)

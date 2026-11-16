@@ -4,11 +4,15 @@
 
 * Add `AccessChecker` with RWM, callback and rights-only checks and logical composition
 * Add `AccessChecker` entry points for role lists, repositories and Ktor helpers; deprecate `RWMRole.checkRights`
+* Exclude the cached `rightsChecker` from `AccessChecker.RWM` serialization so it is rebuilt from `accessRights`
 * Fix `RWMRole.AccessRights.contains` to require every requested access flag
+* Change `RWMRole.AccessRights` to a data class with flag-based equality and hash codes while preserving its original string serialization
+* Document that RWM flag checks ignore character order, repetitions and unrecognized characters: `rw`, `wr`, `rrw` and `wrx` represent the same rights
 * Correct write/manage flag mapping in `RWMRole` factories and align `checkRights` Boolean arguments with read/write/manage order
 * Align identifier filtering with `AccessChecker.RWM`: a null identifier accepts any role identifier, while a non-null identifier requires an exact match
 * Change `BaseRole` to a data class while preserving its plain-string serialization
-* Add tests for role serialization, access checks, checker composition and repository integration; expand role-checking documentation
+* Add tests for role and access-rights serialization, access checks, checker composition and repository integration; expand role-checking documentation
+* Add regression tests for custom `RightsChecker` overload dispatch
 * Enable parallel Gradle tooling sync
 * Dependencies:
     * `Kotlin Coroutines`: `1.11.0` (tests)

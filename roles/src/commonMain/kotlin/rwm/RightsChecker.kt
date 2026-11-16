@@ -42,6 +42,8 @@ fun interface RightsChecker {
 
     /**
      * Default checker that passes when the requested rights are contained in the granted [rights].
+     * Compares only the read/write/manage flags: character order, repetitions and unrecognized characters
+     * do not affect the result. For example, `rw`, `wr`, `rrw` and `wrx` represent the same access rights.
      *
      * @property rights The granted access rights against which incoming requests are checked.
      */

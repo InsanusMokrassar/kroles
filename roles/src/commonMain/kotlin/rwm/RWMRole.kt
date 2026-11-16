@@ -1,7 +1,12 @@
 package dev.inmo.kroles.roles.rwm
 
 import dev.inmo.kroles.roles.BaseRole
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import kotlin.jvm.JvmInline
 import kotlin.jvm.JvmName
 
@@ -82,13 +87,28 @@ value class RWMRole internal constructor(
 
     /**
      * Read/write/manage flags backed by a string. Each flag is set when its lowercase character occurs
-     * anywhere in [string]; unrecognized characters do not grant access.
+     * anywhere in [string]. Character order, repetitions and unrecognized characters do not affect the flags.
+     * For example, `rw`, `wr`, `rrw` and `wrx` all enable read and write access without manage access.
+     *
+     * Equality and hash codes use the access flags, so equivalent flag sets compare equal with `==`.
+     * The original string is preserved and serialized as a primitive string without normalization.
      *
      * @property string Raw rights text, preserved as supplied.
      */
-    @Serializable
-    @JvmInline
-    value class AccessRights internal constructor(val string: String) : Comparable<Identifier> {
+    @Serializable(with = AccessRights.Serializer::class)
+    @ExposedCopyVisibility
+    data class AccessRights internal constructor(val string: String) : Comparable<Identifier> {
+        /**
+         * Serializes rights as their original string, preserving character order and unrecognized characters.
+         */
+        object Serializer : KSerializer<AccessRights> {
+            override val descriptor = PrimitiveSerialDescriptor("dev.inmo.kroles.roles.rwm.RWMRole.AccessRights", PrimitiveKind.STRING)
+
+            override fun serialize(encoder: Encoder, value: AccessRights) = encoder.encodeString(value.string)
+
+            override fun deserialize(decoder: Decoder): AccessRights = AccessRights(decoder.decodeString())
+        }
+
         /**
          * True when the read (r) flag is present.
          */
@@ -149,12 +169,21 @@ value class RWMRole internal constructor(
 
         /**
          * Returns true when this rights set grants every access flag requested by [requested].
+         * Compares flags only, ignoring character order, repetitions and unrecognized characters.
          *
          * @param requested The access rights that must be present in this set.
          */
         infix operator fun contains(requested: AccessRights) = (requested.r == false || r) && (!requested.w || w) && (!requested.m || m)
         override fun toString(): String {
             return string
+        }
+
+        override fun hashCode(): Int {
+            return (if (r) 1 else 0) + (if (w) 2 else 0) + (if (m) 4 else 0)
+        }
+
+        override fun equals(other: Any?): Boolean {
+            return super.equals(other) || (other is AccessRights && other.r == r && other.w == w && other.m == m)
         }
     }
 
