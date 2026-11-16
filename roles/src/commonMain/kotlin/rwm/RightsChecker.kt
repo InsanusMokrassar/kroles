@@ -41,9 +41,11 @@ fun interface RightsChecker {
     }
 
     /**
-     * Default checker that passes when the required [rights] are contained in the checked rights.
+     * Default checker that passes when the requested rights are contained in the granted [rights].
+     * Compares only the read/write/manage flags: character order, repetitions and unrecognized characters
+     * do not affect the result. For example, `rw`, `wr`, `rrw` and `wrx` represent the same access rights.
      *
-     * @property rights The required access rights this checker is built around.
+     * @property rights The granted access rights against which incoming requests are checked.
      */
     @Serializable
     @JvmInline
@@ -54,15 +56,15 @@ fun interface RightsChecker {
 
     companion object {
         /**
-         * Creates a [Default] checker for the given required [rights].
+         * Creates a [Default] checker for the given granted [rights].
          */
         operator fun invoke(rights: RWMRole.AccessRights) = Default(rights)
         /**
-         * Creates a [Default] checker from a raw rights [rights] string.
+         * Creates a [Default] checker from a raw granted [rights] string.
          */
         operator fun invoke(rights: String) = invoke(RWMRole.AccessRights(rights))
         /**
-         * Creates a [Default] checker from the individual read/write/manage flags.
+         * Creates a [Default] checker from the individual granted read/write/manage flags.
          */
         operator fun invoke(read: Boolean, write: Boolean, manage: Boolean) = Default(
             RWMRole.AccessRights(

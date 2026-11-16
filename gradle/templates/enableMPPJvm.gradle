@@ -5,6 +5,7 @@ kotlin {
     sourceSets {
         jvmTest {
             dependencies {
+                implementation libs.kotlin.coroutines.debug
                 implementation libs.kotlin.test.junit
             }
         }
