@@ -4,11 +4,13 @@ import dev.inmo.kroles.roles.rwm.AccessChecker
 import dev.inmo.kroles.roles.rwm.RWMRole
 import dev.inmo.kroles.roles.rwm.RWMRole.AccessRights
 import dev.inmo.kroles.roles.rwm.RWMRole.Identifier
+import dev.inmo.kroles.roles.rwm.RightsChecker
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.test.fail
 
 class AccessCheckerTests {
     private val role = RWMRole("groups", AccessRights("rw"), Identifier("42"))
@@ -85,6 +87,67 @@ class AccessCheckerTests {
             assertFalse(checker.check(it))
             assertFalse(checker.check(BaseRole(it)))
         }
+    }
+
+    @Test
+    fun rwmRightsOnlyChecksEveryRightsCombination() = runTest {
+        rights.forEach { available ->
+            val checker = AccessChecker.RWMRightsOnly(RightsChecker(available))
+            rights.forEach { required ->
+                val checkedRole = RWMRole("groups", AccessRights(required), Identifier("42"))
+                assertChecks(required.all { it in available }, checker, checkedRole)
+            }
+        }
+    }
+
+    @Test
+    fun rwmRightsOnlyIgnoresPrefixAndIdentifier() = runTest {
+        val checker = AccessChecker.RWMRightsOnly(RightsChecker("r"))
+        listOf("groups", "users").forEach { prefix ->
+            listOf(null, Identifier("42"), Identifier("43")).forEach { identifier ->
+                assertChecks(true, checker, RWMRole(prefix, AccessRights("r"), identifier))
+                assertChecks(false, checker, RWMRole(prefix, AccessRights("rw"), identifier))
+            }
+        }
+    }
+
+    @Test
+    fun rwmRightsOnlyDelegatesToAccessRightsOverload() = runTest {
+        val checkedRole = RWMRole("groups", AccessRights("wrx"), Identifier("42"))
+        listOf(false, true).forEach { expected ->
+            val received = mutableListOf<AccessRights>()
+            val checker = AccessChecker.RWMRightsOnly(object : RightsChecker {
+                override suspend fun invoke(rights: AccessRights): Boolean {
+                    received.add(rights)
+                    return expected
+                }
+
+                override suspend fun invoke(rights: String): Boolean = fail("Expected the AccessRights overload")
+            })
+
+            assertChecks(expected, checker, checkedRole)
+            assertEquals(List(3) { checkedRole.rights }, received)
+        }
+    }
+
+    @Test
+    fun rwmRightsOnlyRejectsUnparseableRolesWithoutInvokingChecker() = runTest {
+        val checker = AccessChecker.RWMRightsOnly(RightsChecker { fail("No parsed rights to check") })
+
+        listOf("groups", "groups.", "groups.   ").forEach {
+            assertFalse(checker.check(it))
+            assertFalse(checker.check(BaseRole(it)))
+        }
+    }
+
+    @Test
+    fun rwmRightsOnlyChecksTypedRolesWithoutReparsing() = runTest {
+        val checker = AccessChecker.RWMRightsOnly(RightsChecker(""))
+        val emptyRole = RWMRole("groups", AccessRights(""))
+
+        assertTrue(checker.check(emptyRole))
+        assertFalse(checker.check(emptyRole.role))
+        assertFalse(checker.check(emptyRole.role.plain))
     }
 
     @Test

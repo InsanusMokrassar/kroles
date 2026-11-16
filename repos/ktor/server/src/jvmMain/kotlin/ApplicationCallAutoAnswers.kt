@@ -1,11 +1,33 @@
 package dev.inmo.kroles.repos.ktor.repos.ktor.server
 
 import dev.inmo.kroles.repos.*
+import dev.inmo.kroles.roles.rwm.AccessChecker
 import dev.inmo.kroles.roles.rwm.RWMRole
 import dev.inmo.kroles.roles.rwm.RightsChecker
+import dev.inmo.kroles.roles.rwm.rwmRoleOrNull
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
+
+/**
+ * Checks [subject]'s effective roles with [accessChecker], responding with [statusCode] when none passes.
+ *
+ * @return `true` when access is allowed; otherwise `false` (after responding with [statusCode]).
+ */
+suspend fun ApplicationCall.isAccessAllowedOrStatus(
+    repo: ReadRolesRepo,
+    subject: BaseRoleSubject,
+    accessChecker: AccessChecker,
+    statusCode: HttpStatusCode = HttpStatusCode.NoContent
+): Boolean {
+    val result = repo.isAccessAllowed(subject, accessChecker)
+
+    if (!result) {
+        respond(statusCode)
+    }
+
+    return result
+}
 
 /**
  * Checks whether [subject] is allowed on [identifier] under [prefix] according to [accessChecker],
@@ -20,20 +42,12 @@ suspend fun ApplicationCall.isIdentifierAllowedOrStatus(
     identifier: RWMRole.Identifier,
     statusCode: HttpStatusCode = HttpStatusCode.NoContent,
     accessChecker: RightsChecker
-): Boolean {
-    val result = repo.isIdentifierAllowed(
-        subject = subject,
-        prefix = prefix,
-        identifier = identifier,
-        accessCheck = accessChecker
-    )
-
-    if (!result) {
-        respond(statusCode)
-    }
-
-    return result
-}
+): Boolean = isAccessAllowedOrStatus(
+    repo = repo,
+    subject = subject,
+    accessChecker = AccessChecker.RWM(prefix = prefix, identifier = identifier) * AccessChecker.RWMRightsOnly(accessChecker),
+    statusCode = statusCode
+)
 
 /**
  * Overload of [isIdentifierAllowedOrStatus] taking the [rightsChecker] before the [statusCode].
@@ -157,15 +171,12 @@ suspend fun ApplicationCall.isAccessAllowedOrStatus(
     subject: BaseRoleSubject,
     statusCode: HttpStatusCode = HttpStatusCode.NoContent,
     rightsChecker: RightsChecker
-): Boolean {
-    val result = repo.isAccessAllowed(subject, prefix, rightsChecker)
-
-    if (!result) {
-        respond(statusCode)
-    }
-
-    return result
-}
+): Boolean = isAccessAllowedOrStatus(
+    repo = repo,
+    subject = subject,
+    accessChecker = AccessChecker.RWM(prefix = prefix) * AccessChecker.RWMRightsOnly(rightsChecker),
+    statusCode = statusCode
+)
 
 /**
  * Overload of [isAccessAllowedOrStatus] that builds the rights check from a [requiredRights] string

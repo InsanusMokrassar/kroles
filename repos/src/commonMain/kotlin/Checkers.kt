@@ -5,6 +5,14 @@ import dev.inmo.kroles.roles.rwm.*
 
 
 /**
+ * Checks whether [accessCheck] accepts any effective role of [subject].
+ */
+suspend fun ReadRolesRepo.isAccessAllowed(
+    subject: BaseRoleSubject,
+    accessCheck: AccessChecker
+): Boolean = getAllRoles(subject).isAccessAllowed(accessCheck)
+
+/**
  * Checks whether the given [subject], through all its effective roles, is allowed to access the resource named by
  * [prefix]/[identifier] according to the given [accessCheck].
  */

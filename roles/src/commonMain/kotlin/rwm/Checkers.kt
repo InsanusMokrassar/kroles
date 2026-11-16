@@ -4,6 +4,13 @@ import dev.inmo.kroles.roles.BaseRole
 
 
 /**
+ * Returns true when [accessCheck] accepts any role in this list.
+ */
+suspend fun List<BaseRole>.isAccessAllowed(
+    accessCheck: AccessChecker
+): Boolean = any { accessCheck.check(it) }
+
+/**
  * Returns true when a role with the exact [prefix] and [identifier] passes [accessCheck].
  */
 suspend fun List<BaseRole>.isIdentifierAllowed(
@@ -11,9 +18,8 @@ suspend fun List<BaseRole>.isIdentifierAllowed(
     identifier: RWMRole.Identifier,
     accessCheck: RightsChecker
 ): Boolean {
-    return any {
-        RWMRole.checkRights(it, prefix, identifier, accessCheck)
-    }
+    val checker = AccessChecker.RWM(prefix = prefix, identifier = identifier) * AccessChecker.RWMRightsOnly(accessCheck)
+    return isAccessAllowed(checker)
 }
 
 /**
@@ -24,7 +30,7 @@ suspend fun List<BaseRole>.isIdentifierAllowed(
     identifier: RWMRole.Identifier,
     requiredAccess: String
 ): Boolean {
-    return isIdentifierAllowed(prefix, identifier, RightsChecker(requiredAccess))
+    return isAccessAllowed(AccessChecker.RWM(prefix, RWMRole.AccessRights(requiredAccess), identifier))
 }
 
 /**
@@ -37,7 +43,7 @@ suspend fun List<BaseRole>.isIdentifierAllowed(
     write: Boolean = false,
     manage: Boolean = false
 ): Boolean {
-    return isIdentifierAllowed(prefix, identifier, RightsChecker(read, write, manage))
+    return isAccessAllowed(AccessChecker.RWM(prefix, read, write, manage, identifier))
 }
 
 /**
@@ -47,9 +53,8 @@ suspend fun List<BaseRole>.isAccessAllowed(
     prefix: String,
     accessCheck: RightsChecker
 ): Boolean {
-    return any {
-        RWMRole.checkRights(it, prefix, null, accessCheck)
-    }
+    val checker = AccessChecker.RWM(prefix = prefix) * AccessChecker.RWMRightsOnly(accessCheck)
+    return isAccessAllowed(checker)
 }
 
 /**
@@ -59,7 +64,7 @@ suspend fun List<BaseRole>.isAccessAllowed(
     prefix: String,
     requiredAccess: String
 ): Boolean {
-    return isAccessAllowed(prefix, RightsChecker(requiredAccess))
+    return isAccessAllowed(AccessChecker.RWM(prefix, RWMRole.AccessRights(requiredAccess)))
 }
 
 /**
@@ -71,7 +76,7 @@ suspend fun List<BaseRole>.isAccessAllowed(
     write: Boolean = false,
     manage: Boolean = false
 ): Boolean {
-    return isAccessAllowed(prefix, RightsChecker(read, write, manage))
+    return isAccessAllowed(AccessChecker.RWM(prefix, read, write, manage))
 }
 
 /**

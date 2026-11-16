@@ -94,7 +94,9 @@ The list helpers have these semantics:
 | `getAllowedIdentifiers` | Returns matching identifiers, an empty list if none qualify, or `null` if a qualifying role has no identifier (unrestricted identifiers). |
 | `includesBaseRole` | Uses permission checks for a parsed RWM role and exact list membership for other roles. |
 
-`RWMRole.checkRights` checks a single `BaseRole`. List checks succeed if one role passes; they do not combine rights from different roles. For example, separate `documents.r.42` and `documents.w.42` roles do not satisfy `canRead * canWrite`.
+`AccessChecker.check` checks a single role. Pass an `AccessChecker` to `roles.isAccessAllowed(checker)` to check a list, or to `repo.isAccessAllowed(subject, checker)` to check a subject's effective roles. `AccessChecker.RWM` checks the prefix, configured rights and optional identifier; `AccessChecker { role -> ... }` supports custom checks, including non-RWM roles. `RWMRole.checkRights` is deprecated.
+
+List checks succeed if one role passes; they do not combine rights from different roles. For example, separate `documents.r.42` and `documents.w.42` roles do not satisfy `canRead * canWrite`.
 
 ## Composition
 

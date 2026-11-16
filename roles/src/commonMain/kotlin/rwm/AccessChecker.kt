@@ -100,6 +100,32 @@ fun interface AccessChecker {
     }
 
     /**
+     * Adapts [rightsChecker] to check an RWM role's access rights, ignoring its prefix and identifier.
+     *
+     * Passes [RWMRole.rights] to the [RWMRole.AccessRights] overload of [RightsChecker.invoke].
+     * Base roles and strings that cannot be parsed as RWM roles return false without invoking [rightsChecker].
+     * An [RWMRole] input is checked directly, without reparsing its underlying role.
+     *
+     * @param rightsChecker Predicate that determines whether the role's rights are accepted.
+     */
+    class RWMRightsOnly(
+        private val rightsChecker: RightsChecker
+    ) : AccessChecker {
+        /**
+         * Checks [role]'s rights directly, including empty rights.
+         */
+        override suspend fun check(role: RWMRole): Boolean = rightsChecker(role.rights)
+        /**
+         * Parses [role] as an RWM role and checks its rights, or returns false when parsing fails.
+         */
+        override suspend fun check(role: BaseRole): Boolean = role.rwmRoleOrNull() ?.let { check(it) } == true
+        /**
+         * Wraps [role] in a [BaseRole] and applies the same parsing and rights check.
+         */
+        override suspend fun check(role: String): Boolean = check(BaseRole(role))
+    }
+
+    /**
      * Combines checkers with logical OR, checking [other] only when this checker fails.
      */
     operator fun plus(other: AccessChecker): AccessChecker {
